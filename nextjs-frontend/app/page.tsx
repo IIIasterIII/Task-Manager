@@ -6,32 +6,25 @@ export default function Home() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const cookies = document.cookie; // теперь доступна access_token
-        const accessToken = cookies
-          .split("; ")
-          .find(row => row.startsWith("access_token="))
-          ?.split("=")[1];
-        console.log(accessToken)
-  
         const res = await fetch("http://localhost:8000/me", {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+          method: "POST",
+          credentials: "include",
         });
-
-        if (res.status == 401) {
-
-          const res = await fetch("http://localhost:8000/refresh", {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
+  
+        if (res.ok) {
+          const data = await res.json();
+          console.log("Current user:", data);
+        } else if (res.status === 401) {
+          const refreshRes = await fetch("http://localhost:8000/refresh", {
+            method: "POST",
+            credentials: "include",
           });
-
-          console.log(res)
-
+  
+          const data = await refreshRes.json();
+          console.log("Refreshed token:", data);
         }
       } catch (err) {
-        console.log(err)
+        console.log(err);
       }
     };
   
