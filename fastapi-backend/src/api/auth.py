@@ -129,13 +129,24 @@ async def refresh_token(access_token: str = Cookie(None)):
     try:
         payload = decode_token(access_token, ignore_expiration=True)
         user_id = payload.get("sub")
+        email = payload.get("email")
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
     refresh_data = await redis.get(f"refresh_user:{user_id}")
     if not refresh_data:
         raise HTTPException(status_code=401, detail="Session expired in redis")
     new_access_token = create_access_token(
-        data={"sub": user_id, "email": payload.get("email")},
+        data={"sub": user_id, "email": email},
         expires_delta=timedelta(minutes=30)
     )
-    return {"access_token": new_access_token}
+    response = JSONResponse(content={"status": "refreshed"})
+    response.set_cookie(
+        key="access_token", 
+        value=new_access_token,
+        httponly=True, 
+        secure=False,
+        samesite="lax"
+    )
+    return response
