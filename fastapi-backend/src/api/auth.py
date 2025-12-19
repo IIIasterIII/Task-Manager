@@ -1,56 +1,45 @@
-from fastapi import Depends, HTTPException, status, Request, Cookie, APIRouter
+from fastapi import Depends, HTTPException, Request, Cookie, APIRouter
 from authlib.integrations.starlette_client import OAuth
-from jose import jwt, ExpiredSignatureError, JWTError
+from jose import jwt, JWTError, ExpiredSignatureError
+from datetime import datetime, timedelta, timezone
 from ..db.session import SessionDep, AsyncSession
-from ..db.models.users import User, IssuedToken
-from fastapi.responses import RedirectResponse
-from datetime import datetime, timedelta
+from ..db.models.users import User
+from fastapi.responses import RedirectResponse, JSONResponse
+from redis.asyncio import Redis
 from dotenv import load_dotenv
 from sqlalchemy import select
-import traceback
-import httpx
+import json
 import uuid
 import os
+import httpx
 
 load_dotenv(override=True)
 router = APIRouter()
-
+redis = Redis(host="localhost", port=6379, decode_responses=True)
 oauth = OAuth()
 oauth.register(
     name="auth_demo",
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-    authorize_url="https://accounts.google.com/o/oauth2/auth",
-    authorize_params=None,
-    access_token_url="https://accounts.google.com/o/oauth2/token",
-    access_token_params=None,
-    refresh_token_url=None,
-    authorize_state=os.getenv("SECRET_KEY"),
-    redirect_uri=os.getenv("REDIRECT_URL"),
-    jwks_uri="https://www.googleapis.com/oauth2/v3/certs",
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
     client_kwargs={"scope": "openid profile email"},
 )
-
-SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
+REFRESH_TOKEN_EXPIRE_DAYS = 7
 
-def create_access_token( data: dict, expires_delta: timedelta = None ):
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=30))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
+    if "sub" in to_encode:
+        to_encode["sub"] = str(to_encode["sub"])
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def get_current_user( token: str = Cookie(None) ):
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return {"user_id": payload.get("sub"), "email": payload.get("email")}
-    except ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
+def decode_token(token: str, ignore_expiration: bool = False):
+    options = {"verify_exp": not ignore_expiration}
+    return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options=options)
+
 @router.get("/login")
 async def login(request: Request):
     request.session.clear()
@@ -63,88 +52,90 @@ async def log_user( db: AsyncSession, user_email, username, user_pic, first_logg
     user = result.scalars().first()
     if not user:
         user = User( email_id=user_email, username=username, user_pic=user_pic, first_logged_in=first_logged_in, last_accessed=last_accessed )
+        db.add(user)
+        await db.flush()
     else:
         user.last_accessed = last_accessed
     await db.refresh(user)
     await db.commit()
     return user.user_id
 
-async def log_token(session: AsyncSession, access_token, user_email, session_id):
-    token = IssuedToken( token=access_token, email_id=user_email, session_id=session_id, )
-    session.add(token)
-    await session.commit()
+async def log_refresh_token(user_id: str, request: Request):
+    token_id = str(uuid.uuid4())
+    device = request.headers.get("user-agent", "unknown")
+    ip = request.headers.get("x-forwarded-for", request.client.host)
+    created_at = datetime.utcnow().isoformat()
+    token_data = { "token_id": token_id, "device": device, "ip": ip, "created_at": created_at }
+    await redis.set(f"refresh_user:{user_id}", json.dumps(token_data), ex=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60)
 
 @router.get("/auth")
 async def auth(request: Request, db: SessionDep):
     try:
         token = await oauth.auth_demo.authorize_access_token(request)
+        user_info = token.get("userinfo")
+        if not user_info:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get("https://www.googleapis.com/oauth2/v3/userinfo", headers={"Authorization": f"Bearer {token['access_token']}"})
+                user_info = resp.json()
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Google authentication failed.{e}")
-
-    try:
-        user_info_endpoint = "https://www.googleapis.com/oauth2/v2/userinfo"
-        headers = {"Authorization": f'Bearer {token["access_token"]}'}
-        async with httpx.AsyncClient() as client:
-            google_response = await client.get(user_info_endpoint, headers=headers)
-            user_info = google_response.json()
-    except Exception as e:
-        raise HTTPException(status_code=401, detail="Google authentication failed.")
-
-    user = token.get("userinfo")
-    expires_in = token.get("expires_in")
-    user_id = user.get("sub")
-    iss = user.get("iss")
-    user_email = user.get("email")
-    first_logged_in = datetime.utcnow()
-    last_accessed = datetime.utcnow()
-    username = user_info.get("name")
-    user_pic = user_info.get("picture")
-
-    if iss not in ["https://accounts.google.com", "accounts.google.com"]:
-        raise HTTPException(status_code=401, detail="Google authentication failed.")
-
-    if user_id is None:
-        raise HTTPException(status_code=401, detail="Google authentication failed.")
-
-    access_token_expires = timedelta(seconds=expires_in)
-    session_id = str(uuid.uuid4())
-    user_id = await log_user(db, user_email, username, user_pic, first_logged_in, last_accessed)
-    access_token = create_access_token(data={"sub": user_id, "email": user_email}, expires_delta=access_token_expires)
-    await log_token(db, access_token, user_email, session_id)
-
-    redirect_url = request.session.pop("login_redirect", "")
-    response = RedirectResponse(redirect_url)
-    response.set_cookie( key="access_token", value=access_token, httponly=True, secure=True, samesite="strict" )
+        raise HTTPException(status_code=401, detail=f"Google auth failed: {str(e)}")
+    user_email = user_info.get("email")
+    user_id_internal = await log_user(
+        db, 
+        user_email, 
+        user_info.get("name"), 
+        user_info.get("picture"), 
+        datetime.utcnow(), 
+        datetime.utcnow()
+    )
+    access_token = create_access_token(
+        data={"sub": str(user_id_internal), "email": user_email}, 
+        expires_delta=timedelta(minutes=30)
+    )
+    await log_refresh_token(user_id_internal, request)
+    response = RedirectResponse(url=request.session.pop("login_redirect", os.getenv("FRONTEND_URL")))
+    response.set_cookie(
+        key="access_token", 
+        value=access_token, 
+        httponly=True, 
+        secure=False, 
+        samesite="lax"
+    )
     return response
 
-def get_current_user(token: str = Cookie(None)):
-    if not token:
+def get_current_user(access_token: str = Cookie(None)):
+    if not access_token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    credentials_exception = HTTPException( status_code=401, detail="Could not validate credentials", headers={"WWW-Authenticate": "Bearer"} )
-
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        user_email: str = payload.get("email")
-
-        if user_id is None or user_email is None:
-            raise credentials_exception
-        return {"user_id": user_id, "user_email": user_email}
-
+        payload = decode_token(access_token, ignore_expiration=False)
+        user_id = payload.get("sub")
+        email = payload.get("email")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+        return {"user_id": user_id, "email": email}
     except ExpiredSignatureError:
-        traceback.print_exc()
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expired. Please login again.")
+        raise HTTPException(status_code=401, detail="Token expired")
     except JWTError:
-        traceback.print_exc()
-        raise credentials_exception
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=401, detail="Not Authenticated")
+        raise HTTPException(status_code=401, detail="Invalid token")
 
-def validate_user_request(token: str = Cookie(None)):
-    session_details = get_current_user(token)
-    return session_details
+@router.post("/me")
+async def me(current_user: dict = Depends(get_current_user)):
+    return current_user
 
-@router.get("/chat")
-async def get_response(current_user: dict = Depends(get_current_user)):
-    return {"message": "Welcome!", "user": current_user}
+@router.post("/refresh")
+async def refresh_token(access_token: str = Cookie(None)):
+    if not access_token:
+        raise HTTPException(status_code=401, detail="No access token")
+    try:
+        payload = decode_token(access_token, ignore_expiration=True)
+        user_id = payload.get("sub")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    refresh_data = await redis.get(f"refresh_user:{user_id}")
+    if not refresh_data:
+        raise HTTPException(status_code=401, detail="Session expired in redis")
+    new_access_token = create_access_token(
+        data={"sub": user_id, "email": payload.get("email")},
+        expires_delta=timedelta(minutes=30)
+    )
+    return {"access_token": new_access_token}
