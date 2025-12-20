@@ -1,36 +1,7 @@
 "use client"
 
 import Image from "next/image";
-import { useEffect } from "react";
 export default function Home() {
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch("http://localhost:8000/me", {
-          method: "POST",
-          credentials: "include",
-        });
-  
-        if (res.ok) {
-          const data = await res.json();
-          console.log("Current user:", data);
-        } else if (res.status === 401) {
-          const refreshRes = await fetch("http://localhost:8000/refresh", {
-            method: "POST",
-            credentials: "include",
-          });
-  
-          const data = await refreshRes.json();
-          console.log("Refreshed token:", data);
-        }
-      } catch (err) {
-        console.log(err);
-      }
-    };
-  
-    checkAuth();
-  }, []);
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
