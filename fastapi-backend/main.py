@@ -1,6 +1,7 @@
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from src.api.auth import router as AuthRouter
+from src.api.tasks import router as TaskRouter
 from src.db.session import init_models
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -11,6 +12,7 @@ load_dotenv()
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("FASTAPI_SECRET_KEY"))
 app.include_router(AuthRouter)
+app.include_router(TaskRouter)
 
 origins = [ "http://localhost:3000", "https://localhost:3000" ]
 

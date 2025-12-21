@@ -2,7 +2,7 @@ import React from 'react'
 
 const Page = () => {
   return (
-    <div>Page</div>
+    <div className='bg-indigo-400 relative h-screen'>Page</div>
   )
 }
 
