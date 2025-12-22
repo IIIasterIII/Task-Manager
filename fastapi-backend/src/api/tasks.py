@@ -3,10 +3,15 @@ from pydantic import BaseModel, ConfigDict
 from .auth import get_current_user
 from ..db.session import SessionDep
 from typing import Optional
-from src.db.models.users import User, Task, Profile, Project, UserTask, Label, TaskLabel
+from src.db.models.users import User, Task, Project, UserTask, Label
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
 from fastapi import HTTPException, status
 from datetime import datetime
+from typing import List
+from ..redis.redis import get_redis
+from redis.asyncio import Redis
+import json
 
 router = APIRouter()
 
@@ -24,6 +29,10 @@ class LabelCreate(BaseModel):
 class TaskData(BaseModel):
     title: str
     description: Optional[str] = None
+    priority: str
+    date_at: Optional[str] = None
+    time_at: Optional[str] = None
+    
 
 class LabelDTO(BaseModel):
     id: int
@@ -40,12 +49,12 @@ class ProjectDTO(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 @router.post("/task", status_code=201)
-async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: dict = Depends(get_current_user)):
-    new_task = Task( title=task_data.title, description=task_data.description, user_id=current_user["id"])
+async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: User = Depends(get_current_user)):
+    new_task = Task( title=task_data.title, description=task_data.description, user_id=current_user.id)
     try:
         sess.add(new_task)
         await sess.flush() 
-        assignment = UserTask( user_id=current_user["id"], task_id=new_task.id, added_at=datetime.utcnow() )
+        assignment = UserTask( user_id=current_user.id, task_id=new_task.id, added_at=datetime.utcnow() )
         sess.add(assignment)
         await sess.commit()
         await sess.refresh(new_task)
@@ -57,6 +66,22 @@ async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: d
         await sess.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     
+@router.patch("/tasks/{id}")
+async def complete_task(id: int, sess: SessionDep, current_user: User = Depends(get_current_user)):
+    query = select(Task).where(Task.id == id, Task.user_id == current_user.id)
+    result = await sess.execute(query)
+    task = result.scalar_one_or_none()
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found or access denied")
+    task.is_completed = not task.is_completed
+    try:
+        await sess.commit()
+        await sess.refresh(task)
+        return task
+    except Exception as e:
+        await sess.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update task status")
+    
 @router.post("/project", status_code=201, response_model=ProjectDTO)
 async def create_new_project(project_data: ProjectCreate, sess: SessionDep, current_user: User = Depends(get_current_user)):
     new_project = Project(
@@ -64,7 +89,7 @@ async def create_new_project(project_data: ProjectCreate, sess: SessionDep, curr
         color=project_data.color,
         favorite=project_data.favorite,
         parent_id=project_data.parent_id,
-        user_id=current_user["id"]
+        user_id=current_user.id
     )
     try:
         sess.add(new_project)
@@ -81,12 +106,30 @@ async def create_new_project(project_data: ProjectCreate, sess: SessionDep, curr
         print(f"Unexpected error: {e}")
         raise HTTPException( status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred on the server" )
     
+@router.get("/projects", response_model_by_alias=List[Project])
+async def get_projects(sees: SessionDep, current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
+    cache_key = f"user:{current_user.id}:projects"
+    cached_projects = await redis.get(cache_key)
+    if cached_projects:
+        return json.loads(cached_projects)
+    query = select(Project).where(Project.user_id == current_user.id)
+    res = await sees.execute(query)
+    projects = res.scalars().all()
+
+    projects_data = [
+        {"id": p.id, "name": p.name, "color": p.color, "is_favorite": p.favorite, "user_id": p.user_id, "parent_id": p.parent_id} 
+        for p in projects
+    ]
+
+    await redis.set(cache_key, json.dumps(projects_data), ex=3600)
+    return projects_data
+
 @router.post("/label", response_model=LabelDTO)
 async def create_new_label(data: LabelCreate, sess: SessionDep, current_user: User = Depends(get_current_user)):
     new_label = Label(
         title=data.title,
         color=data.color,
-        user_id=current_user["id"]
+        user_id=current_user.id
     )
     try:
         sess.add(new_label)

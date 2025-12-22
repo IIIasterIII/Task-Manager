@@ -11,3 +11,4 @@ itsdangerous == 2.2.0
 google-auth == 2.45.0
 httpx == 0.28.1
 aioredis == 2.0.1
+redis

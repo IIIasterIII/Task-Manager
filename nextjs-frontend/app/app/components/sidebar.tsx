@@ -4,8 +4,9 @@ import { useEffect, useState } from "react"
 import ActionButton from "./ui/actionButton"
 import CreateNewTaskButton from "./ui/createNewTaskButton"
 import HoverPanel from "./ui/sidebarTop"
-import { useAppDispatch } from '@/app/lib/hook';
-import { setTab } from "@/app/features/ui/uiSlice"
+import { useAppDispatch, useAppSelector } from '@/app/lib/hook';
+import { setTab, toggleCreateProject } from "@/app/features/ui/userSlice"
+import { AnimatePresence, motion } from "motion/react"
 
 export const PlusIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
@@ -49,8 +50,21 @@ export const Check = () => (
   </svg>
 )
 
+const OpenOrCloseSidebar = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 9.75 16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
+  </svg>
+)
+
+const Plus = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+  </svg>
+)
+
 const Sidebar = () => {
   const [selected, setSelected] = useState<number>(0)
+  const [close, setClose] = useState(true)
   const dispatch = useAppDispatch()
 
   const menuBUttons = [
@@ -66,18 +80,30 @@ const Sidebar = () => {
     dispatch(setTab(selected))
   }, [selected])
   
+  const openClosePanel = () => {
+    dispatch(toggleCreateProject()); 
+  }
+  
   return (
-    <div className='flex flex-col bg-indigo-800 w-80 p-5'>
-        <HoverPanel/>
+    <div><AnimatePresence mode="wait">{close ?
+    <motion.div
+    initial={{width: 350}}
+    animate={{}}
+    exit={{width: 0}}
+     className='flex flex-col bg-indigo-800 p-5'>
+        <HoverPanel close={close} setClose={setClose}/>
 
         <div className="mt-10 flex flex-col gap-5">
           <CreateNewTaskButton/>
           {menuBUttons.map(el => <ActionButton key={el.id} id={el.id} title={el.title} icon={el.icon} selected={selected} setSelected={setSelected}/>)}
         </div>
 
+        <button className="w-full h-10 rounded-xl border flex items-center px-5 justify-between mt-5">My Projects <div className="cursor-pointer" onClick={openClosePanel}><Plus/></div></button>
+
         <div className="mt-10">
-          
         </div>
+    </motion.div> : <div><div className="w-10 h-10 border rounded-2xl flex items-center justify-center relative" onClick={() => setClose(!close)}><OpenOrCloseSidebar/></div></div>}
+    </AnimatePresence>
     </div>
   )
 }

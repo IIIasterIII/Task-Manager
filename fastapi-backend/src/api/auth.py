@@ -1,10 +1,11 @@
-from fastapi import Depends, HTTPException, Request, Cookie, APIRouter
+from fastapi import Depends, HTTPException, Request, Cookie, APIRouter, status
 from authlib.integrations.starlette_client import OAuth
 from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import datetime, timedelta, timezone
 from ..db.session import SessionDep, AsyncSession
-from ..db.models.users import User
+from ..db.models.users import User 
 from fastapi.responses import RedirectResponse, JSONResponse
+from ..redis.redis import get_redis
 from redis.asyncio import Redis
 from dotenv import load_dotenv
 from sqlalchemy import select
@@ -15,7 +16,6 @@ import httpx
 
 load_dotenv(override=True)
 router = APIRouter()
-redis = Redis(host="localhost", port=6379, decode_responses=True)
 oauth = OAuth()
 oauth.register(
     name="auth_demo",
@@ -60,7 +60,7 @@ async def log_user( db: AsyncSession, user_email, username, user_pic, first_logg
     await db.commit()
     return user.id
 
-async def log_refresh_token(id: str, request: Request):
+async def log_refresh_token(id: str, request: Request, redis: Redis):
     token_id = str(uuid.uuid4())
     device = request.headers.get("user-agent", "unknown")
     ip = request.headers.get("x-forwarded-for", request.client.host)
@@ -69,7 +69,7 @@ async def log_refresh_token(id: str, request: Request):
     await redis.set(f"refresh_user:{id}", json.dumps(token_data), ex=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60)
 
 @router.get("/auth")
-async def auth(request: Request, db: SessionDep):
+async def auth(request: Request, db: SessionDep, redis: Redis = Depends(get_redis)):
     try:
         token = await oauth.auth_demo.authorize_access_token(request)
         user_info = token.get("userinfo")
@@ -92,7 +92,7 @@ async def auth(request: Request, db: SessionDep):
         data={"sub": str(id_internal), "email": user_email}, 
         expires_delta=timedelta(minutes=30)
     )
-    await log_refresh_token(id_internal, request)
+    await log_refresh_token(id_internal, request, redis)
     response = RedirectResponse(url=request.session.pop("login_redirect", os.getenv("FRONTEND_URL")))
     response.set_cookie(
         key="access_token", 
@@ -103,27 +103,32 @@ async def auth(request: Request, db: SessionDep):
     )
     return response
 
-def get_current_user(access_token: str = Cookie(None)):
+async def get_current_user(access_token: str = Cookie(None), sess: SessionDep = None):
+    print(access_token)
     if not access_token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        raise HTTPException( status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated" )
     try:
-        payload = decode_token(access_token, ignore_expiration=False)
-        id = payload.get("sub")
-        email = payload.get("email")
-        if not id:
-            raise HTTPException(status_code=401, detail="Invalid token payload")
-        return {"id": id, "email": email}
+        payload = decode_token(access_token)
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
     except ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+    query = select(User).where(User.id == int(user_id))
+    result = await sess.execute(query)
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
 
 @router.post("/me")
-async def me(current_user: dict = Depends(get_current_user)):
+async def me(current_user: User = Depends(get_current_user)):
     return current_user
 
 @router.post("/refresh")
-async def refresh_token(access_token: str = Cookie(None)):
+async def refresh_token(access_token: str = Cookie(None), redis: Redis = Depends(get_redis)):
     if not access_token:
         raise HTTPException(status_code=401, detail="No access token")
     try:
