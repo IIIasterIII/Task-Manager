@@ -1,9 +1,9 @@
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, String, DateTime, Boolean, Date, Time, Enum, Table
+from sqlalchemy import Column, String, DateTime, Boolean, Date, Time, Enum, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
 from sqlalchemy import String, INTEGER
-from datetime import date, time
+from datetime import date, time, datetime
 from typing import Optional, List
 import enum
 
@@ -21,7 +21,6 @@ class User(Base):
     profile: Mapped["Profile"] = relationship(back_populates="user")
     tasks: Mapped[list["Task"]] = relationship(back_populates="user")
     projects: Mapped[list["Project"]] = relationship(back_populates="user")
-    task_links: Mapped[List["UserTask"]] = relationship(back_populates="user")
     labels: Mapped[List["Label"]] = relationship(back_populates="user")
 
 class Profile(Base):
@@ -30,13 +29,13 @@ class Profile(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(back_populates="profile")
 
-class UserTask(Base):
-    __tablename__ = "user_tasks"
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+class ProjectTasks(Base):
+    __tablename__ = "project_tasks"
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), primary_key=True)
     task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), primary_key=True)
-    added_at = Column(DateTime)
-    task: Mapped["Task"] = relationship(back_populates="user_links")
-    user: Mapped["User"] = relationship(back_populates="task_links")
+    added_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    task: Mapped["Task"] = relationship(back_populates="task_links")
+    project: Mapped["Project"] = relationship(back_populates="project_links")
 
 class Project(Base):
     __tablename__ = "projects"
@@ -49,6 +48,7 @@ class Project(Base):
     user: Mapped["User"] = relationship(back_populates="projects")
     parent: Mapped[Optional["Project"]] = relationship("Project", remote_side=[id], back_populates="sub_projects" )
     sub_projects: Mapped[List["Project"]] = relationship( "Project", back_populates="parent", cascade="all, delete-orphan")
+    project_links: Mapped[List["ProjectTasks"]] = relationship(back_populates="project")
 
 class TaskPriority(enum.Enum):
     LOW = "low"
@@ -84,4 +84,4 @@ class Task(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(back_populates="tasks")
     task_label_links: Mapped[List["TaskLabel"]] = relationship(back_populates="task")
-    user_links: Mapped[List["UserTask"]] = relationship(back_populates="task")
+    task_links: Mapped[List["ProjectTasks"]] = relationship(back_populates="task")

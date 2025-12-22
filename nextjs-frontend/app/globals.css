@@ -1,22 +1,51 @@
 @import "tailwindcss";
 
-:root {
-  --foreground: #171717;
+@theme {
+  --font-heading: "Noto Sans Nandinagari", sans-serif;
+  --font-body: "Roboto", sans-serif;
+
+  --text-sm: 0.833rem;
+  --text-base: 1rem;
+  --text-xl: 1.200rem;
+  --text-2xl: 1.440rem;
+  --text-3xl: 1.728rem;
+  --text-4xl: 2.074rem;
+  --text-5xl: 2.489rem;
+
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+
+  --color-text-50: #f2f2f2; --color-text-100: #e6e6e6; --color-text-200: #cccccc;
+  --color-text-300: #b3b3b3; --color-text-400: #999999; --color-text-500: #808080;
+  --color-text-600: #666666; --color-text-700: #4d4d4d; --color-text-800: #333333;
+  --color-text-900: #1a1a1a; --color-text-950: #0d0d0d;
+
+  --color-background-50: #f2f2f2; --color-background-100: #e6e6e6; --color-background-200: #cccccc;
+  --color-background-300: #b3b3b3; --color-background-400: #999999; --color-background-500: #808080;
+  --color-background-600: #666666; --color-background-700: #4d4d4d; --color-background-800: #333333;
+  --color-background-900: #1a1a1a; --color-background-950: #0d0d0d;
+
+  --color-primary-50: #e6feff; --color-primary-100: #cdfdfe; --color-primary-200: #9afbfe;
+  --color-primary-300: #68f8fd; --color-primary-400: #35f6fd; --color-primary-500: #03f4fc;
+  --color-primary-600: #02c3ca; --color-primary-700: #029297; --color-primary-800: #016265;
+  --color-primary-900: #013132; --color-primary-950: #001819;
+
+  --color-secondary-50: #e5fdff; --color-secondary-100: #ccfbff; --color-secondary-200: #99f7ff;
+  --color-secondary-300: #66f2ff; --color-secondary-400: #33eeff; --color-secondary-500: #00eaff;
+  --color-secondary-600: #00bbcc; --color-secondary-700: #008c99; --color-secondary-800: #005e66;
+  --color-secondary-900: #002f33; --color-secondary-950: #00171a;
+
+  --color-accent-50: #e5fff8; --color-accent-100: #ccfff1; --color-accent-200: #99ffe4;
+  --color-accent-300: #66ffd6; --color-accent-400: #33ffc9; --color-accent-500: #00ffbb;
+  --color-accent-600: #00cc96; --color-accent-700: #009970; --color-accent-800: #00664b;
+  --color-accent-900: #003325; --color-accent-950: #001a13;
 }
 
-@theme inline {
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: var(--color-background-950);
+    color: var(--color-text-50);
+    font-family: var(--font-body);
+    @apply antialiased;
   }
-}
-
-body {
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }

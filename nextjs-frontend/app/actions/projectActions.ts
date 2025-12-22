@@ -28,3 +28,23 @@ export async function createProject(data: ProjectData) {
       return { error: "Сетевая ошибка" }
     }
   }
+
+export async function getProjects() {
+    const cookieStore = await cookies()
+    const allCookies = cookieStore.toString()
+    try {
+      const res = await fetch(`http://localhost:8000/projects`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json", "Cookie": allCookies }
+      })
+  
+      if (!res.ok) return { error: "Ошибка сервера" }
+      
+      revalidatePath("/tasks") 
+
+      const data = await res.json()
+      return data
+    } catch (e) {
+      return { error: "Сетевая ошибка" }
+    }
+  }

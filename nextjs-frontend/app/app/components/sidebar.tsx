@@ -1,12 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { startTransition, useEffect, useMemo, useState } from "react"
 import ActionButton from "./ui/actionButton"
 import CreateNewTaskButton from "./ui/createNewTaskButton"
 import HoverPanel from "./ui/sidebarTop"
 import { useAppDispatch, useAppSelector } from '@/app/lib/hook';
 import { setTab, toggleCreateProject } from "@/app/features/ui/userSlice"
 import { AnimatePresence, motion } from "motion/react"
+import { getProjects } from "@/app/actions/projectActions"
+import { useRouter } from "next/navigation"
 
 export const PlusIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
@@ -62,10 +64,27 @@ const Plus = () => (
   </svg>
 )
 
+const Folder = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+  </svg>
+)
+
+interface ProjectProps {
+  id: number
+  color: string
+  is_favorite: boolean
+  name: string
+  parent_id: number | null
+}
+
 const Sidebar = () => {
   const [selected, setSelected] = useState<number>(0)
   const [close, setClose] = useState(true)
   const dispatch = useAppDispatch()
+  const [projects, setProjects] = useState<ProjectProps[]>()
+  const isAuthenticated = useAppSelector((state) => state.ui.isAuthenticated)
+  const router = useRouter()
 
   const menuBUttons = [
     {id: 0, title: "Search", icon: <Glass/>},
@@ -83,6 +102,34 @@ const Sidebar = () => {
   const openClosePanel = () => {
     dispatch(toggleCreateProject()); 
   }
+
+  useEffect(() => {
+    if(!isAuthenticated) return
+
+    startTransition(async () => {
+        const res = await getProjects()
+        setProjects(res)
+    })
+  }, [isAuthenticated])
+
+  useEffect(() => {
+    if(!projects) return
+    console.log(projects)
+  }, [projects])
+
+  const favoriteProjects = useMemo(() => {
+    return Array.isArray(projects) 
+      ? projects.filter(p => p.is_favorite === true) 
+      : [];
+  }, [projects]);
+  
+  const regularProjects = useMemo(() => {
+    return Array.isArray(projects) 
+      ? (
+        projects.filter(p => p.is_favorite === false) && projects.filter(p1 => p1.parent_id != null) 
+      )
+      : [];
+  }, [projects]);
   
   return (
     <div><AnimatePresence mode="wait">{close ?
@@ -90,7 +137,7 @@ const Sidebar = () => {
     initial={{width: 350}}
     animate={{}}
     exit={{width: 0}}
-     className='flex flex-col bg-indigo-800 p-5'>
+     className='flex flex-col bg- p-5'>
         <HoverPanel close={close} setClose={setClose}/>
 
         <div className="mt-10 flex flex-col gap-5">
@@ -100,7 +147,13 @@ const Sidebar = () => {
 
         <button className="w-full h-10 rounded-xl border flex items-center px-5 justify-between mt-5">My Projects <div className="cursor-pointer" onClick={openClosePanel}><Plus/></div></button>
 
-        <div className="mt-10">
+        <div className="flex flex-col gap-1">
+          <h1 className="mb-2">Favorites</h1>
+          {favoriteProjects.map(el => <div key={el.id} onClick={() => router.push(`/app/project/${el.id}`)}>{el.name} is {el.is_favorite && "favorite"}</div>)}
+        </div>
+
+        <div className="mt-10 flex flex-col gap-5 overflow-y-scroll h-100 overflow-y-screen">
+          {regularProjects.map(el =><div key={el.id} className={`${el.parent_id && "bg-amber-200"}`} onClick={() => router.push(`/app/project/${el.id}`)}>{el.name}</div>)}
         </div>
     </motion.div> : <div><div className="w-10 h-10 border rounded-2xl flex items-center justify-center relative" onClick={() => setClose(!close)}><OpenOrCloseSidebar/></div></div>}
     </AnimatePresence>

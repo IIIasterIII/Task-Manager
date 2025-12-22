@@ -1,8 +1,10 @@
 "use client"
 
-import { useAppSelector } from "@/app/lib/hook"
+import { useAppDispatch, useAppSelector } from "@/app/lib/hook"
 import { FC, useState } from "react"
 import { useRouter } from "next/navigation"
+import { logout } from "@/app/features/ui/userSlice"
+import { deleteCookie } from "@/app/actions/apiClient"
 
 interface HoverPanelProps {
   close: boolean
@@ -10,9 +12,16 @@ interface HoverPanelProps {
 }
 
 const HoverPanel : FC<HoverPanelProps> = ({close, setClose}) => {
+  const dispath = useAppDispatch()
   const isUserData = useAppSelector((state) => state.ui.profile)
   const router = useRouter()
   const[open, setOpen] = useState(false)
+
+  const handleLogout = async () => {
+    deleteCookie()
+    dispath(logout())
+    router.replace("/")
+  }
 
   const Notification = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
@@ -77,7 +86,7 @@ const HoverPanel : FC<HoverPanelProps> = ({close, setClose}) => {
       {open && <div className="absolute w-80 z-10 p-5 rounded-xl bg-indigo-50 top-0 translate-y-15 text-gray-600">
           <button className="flex flex-row items-center gap-2 duration-300 hover:bg-gray-300 cursor-pointer px-2 py-2 rounded-xl w-full"><Setting/>Setting</button>
           <hr className="my-1"/>
-          <button className="flex flex-row items-center gap-2 duration-300 hover:bg-gray-300 cursor-pointer px-2 py-2 rounded-xl w-full"><Logout/> Log out</button>
+          <button className="flex flex-row items-center gap-2 duration-300 hover:bg-gray-300 cursor-pointer px-2 py-2 rounded-xl w-full" onClick={handleLogout}><Logout/> Log out</button>
         </div>}
       </div>
   )

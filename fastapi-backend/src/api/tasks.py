@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict
 from .auth import get_current_user
 from ..db.session import SessionDep
 from typing import Optional
-from src.db.models.users import User, Task, Project, UserTask, Label
+from src.db.models.users import User, Task, Project, ProjectTasks, Label
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from fastapi import HTTPException, status
@@ -32,6 +32,7 @@ class TaskData(BaseModel):
     priority: str
     date_at: Optional[str] = None
     time_at: Optional[str] = None
+    project_id: int
     
 
 class LabelDTO(BaseModel):
@@ -54,7 +55,7 @@ async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: U
     try:
         sess.add(new_task)
         await sess.flush() 
-        assignment = UserTask( user_id=current_user.id, task_id=new_task.id, added_at=datetime.utcnow() )
+        assignment = ProjectTasks( project_id=task_data.project_id, task_id=new_task.id, added_at=datetime.utcnow() )
         sess.add(assignment)
         await sess.commit()
         await sess.refresh(new_task)
@@ -106,7 +107,7 @@ async def create_new_project(project_data: ProjectCreate, sess: SessionDep, curr
         print(f"Unexpected error: {e}")
         raise HTTPException( status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred on the server" )
     
-@router.get("/projects", response_model_by_alias=List[Project])
+@router.get("/projects", response_model_by_alias=List[ProjectDTO])
 async def get_projects(sees: SessionDep, current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
     cache_key = f"user:{current_user.id}:projects"
     cached_projects = await redis.get(cache_key)
@@ -117,7 +118,7 @@ async def get_projects(sees: SessionDep, current_user: User = Depends(get_curren
     projects = res.scalars().all()
 
     projects_data = [
-        {"id": p.id, "name": p.name, "color": p.color, "is_favorite": p.favorite, "user_id": p.user_id, "parent_id": p.parent_id} 
+        {"id": p.id, "name": p.name, "color": p.color, "is_favorite": p.favorite, "parent_id": p.parent_id} 
         for p in projects
     ]
 

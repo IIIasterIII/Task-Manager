@@ -45,7 +45,7 @@ async def login(request: Request):
     request.session.clear()
     request.session["login_redirect"] = os.getenv("FRONTEND_URL")
     redirect_uri = os.getenv("REDIRECT_URL") 
-    return await oauth.auth_demo.authorize_redirect(request, redirect_uri=redirect_uri)
+    return await oauth.auth_demo.authorize_redirect(request, prompt="select_account", redirect_uri=redirect_uri)
 
 async def log_user( db: AsyncSession, user_email, username, user_pic, first_logged_in, last_accessed ):
     result = await db.execute(select(User).filter(User.email == user_email))
@@ -98,8 +98,8 @@ async def auth(request: Request, db: SessionDep, redis: Redis = Depends(get_redi
         key="access_token", 
         value=access_token, 
         httponly=True, 
-        secure=False, 
-        samesite="lax"
+        secure=True, 
+        samesite="strict"
     )
     return response
 
