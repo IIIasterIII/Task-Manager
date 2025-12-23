@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { number } from 'motion';
 
 interface UserData {
   id: number;
@@ -13,6 +14,7 @@ interface UserState {
   profile: UserData | null    
   currentTab: string           
   isModalOpen: boolean
+  panel_id: number | null
   isCreateProjectOpen: boolean   
   isAuthenticated: boolean; 
 }
@@ -23,6 +25,7 @@ const initialState: UserState = {
   profile: null,
   currentTab: "inbox",
   isModalOpen: false,
+  panel_id: null,
   isCreateProjectOpen: false,
   isAuthenticated: false,
 };
@@ -32,21 +35,23 @@ export const userSlice = createSlice({
     initialState,
     reducers: {
       setUserData: (state, action: PayloadAction<UserData>) => {
-        state.profile = action.payload;
-        state.isAuthenticated = true;
+        state.profile = action.payload
+        state.isAuthenticated = true
       },
       logout: (state) => {
-        state.profile = null;
-        state.isAuthenticated = false;
+        state.profile = null
+        state.isAuthenticated = false
       },
       setTab: (state, action: PayloadAction<number>) => {
-        state.currentTab = tabs[action.payload] || "inbox";
+        state.currentTab = tabs[action.payload] || "inbox"
       },
-      toggleCreateProject: (state) => {
+      toggleCreateProject: (state, project_id: PayloadAction<number | null>) => {
         state.isCreateProjectOpen = !state.isCreateProjectOpen
+        state.panel_id = project_id.payload
       },
-      toggleModal: (state) => {
-        state.isModalOpen = !state.isModalOpen;
+      toggleModal: (state, project_id: PayloadAction<number | null>) => {
+        state.isModalOpen = !state.isModalOpen
+        state.panel_id = project_id.payload
       }
     },
 });

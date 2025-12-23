@@ -4,6 +4,7 @@ import { createProject } from '@/app/actions/projectActions'
 import { startTransition, useState } from 'react'
 import { useAppDispatch } from '@/app/lib/hook'
 import { toggleCreateProject } from '@/app/features/ui/userSlice'
+import { useAppSelector } from '@/app/lib/hook'
 
 export interface ProjectData {
   name: string
@@ -22,7 +23,6 @@ const ProjectCreation = () => {
   })
 
   const handleCreate = () => {
-    console.log('Отправляем на сервер:', project)
     startTransition(async () => {
       const res = await createProject(project)
       
@@ -85,7 +85,7 @@ const ProjectCreation = () => {
           <hr className='my-2'/>
           
           <div className='flex items-center flex-row justify-end gap-5'>
-            <button className='cursor-pointer text-gray-600 hover:text-black' onClick={() => dispath(toggleCreateProject())}>Close</button>
+            <button className='cursor-pointer text-gray-600 hover:text-black' onClick={() => dispath(toggleCreateProject(null))}>Close</button>
             <button 
               onClick={handleCreate}
               className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"

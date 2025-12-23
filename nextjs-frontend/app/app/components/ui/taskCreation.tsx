@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "motion/react";
-import Selector from "./selector";
 import { useAppSelector, useAppDispatch } from "@/app/lib/hook";
 import { toggleModal } from "@/app/features/ui/userSlice";
 import { Priority, Task } from "@/app/types/task"
@@ -27,11 +26,13 @@ const Ellipsis = () => (
 
 export default function TaskCreation() {
   const dispatch = useAppDispatch();
+  const isPanelId = useAppSelector((state) => state.ui.panel_id)
   const [open, setOpen] = useState(false)
   const [task, setTask] = useState<Task>({
     title: "",
     description: "",
     priority: Priority.LOW,
+    parent_id: isPanelId || null
   })
 
   useEffect(() => {
@@ -44,6 +45,10 @@ export default function TaskCreation() {
       console.log(res)
     })
   }
+
+  useEffect(() => {
+    console.log(isPanelId)
+  }, [isPanelId])
 
   return (
     <motion.div
@@ -86,11 +91,11 @@ export default function TaskCreation() {
           </div>
           <hr />
           <div className="flex flex-row items-center justify-between p-5">
-            <Selector />
+            <div>Parent_id: {isPanelId}</div>
             <div className="gap-5 flex flex-row items-center">
               <button
                 className="cursor-pointer bg-gray-300"
-                onClick={() => dispatch(toggleModal())}
+                onClick={() => dispatch(toggleModal(null))}
               >
                 Cancel
               </button>

@@ -1,6 +1,6 @@
 "use client"
 
-import { startTransition, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from '@/app/lib/hook';
 import Sidebar from "../components/sidebar";
@@ -20,16 +20,8 @@ export default function AppContent({ children }: { children: React.ReactNode }) 
     const router = useRouter()
 
     useEffect(() => {
-        if(!isUserData) return
-        console.log(isUserData)
-    }, [isUserData])
-
-    useEffect(() => {
-        console.log(isCreateProjectOpen)
-    }, [isCreateProjectOpen])
-
-    useEffect(() => {
         let isMounted = true
+
         const checkAuth = async () => {
             try {
                 let res = await fetch("http://localhost:8000/me", { method: "POST", credentials: "include" })

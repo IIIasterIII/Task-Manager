@@ -11,4 +11,5 @@ export interface Task {
     date_at?: string
     time_at?: string
     priority: Priority
+    parent_id: number | null
 }

@@ -24,6 +24,7 @@ export async function toggleTaskStatus(id: number, completed: boolean) {
 export async function createTask(data: Task) {
   const cookieStore = await cookies()
   const allCookies = cookieStore.toString()
+  console.log(data)
   try {
     const res = await fetch("http://localhost:8000/task", {
       method: "POST",

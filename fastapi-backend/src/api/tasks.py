@@ -30,10 +30,9 @@ class TaskData(BaseModel):
     title: str
     description: Optional[str] = None
     priority: str
+    parent_id: int
     date_at: Optional[str] = None
     time_at: Optional[str] = None
-    project_id: int
-    
 
 class LabelDTO(BaseModel):
     id: int
@@ -51,11 +50,12 @@ class ProjectDTO(BaseModel):
 
 @router.post("/task", status_code=201)
 async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: User = Depends(get_current_user)):
+    print("data", task_data)
     new_task = Task( title=task_data.title, description=task_data.description, user_id=current_user.id)
     try:
         sess.add(new_task)
         await sess.flush() 
-        assignment = ProjectTasks( project_id=task_data.project_id, task_id=new_task.id, added_at=datetime.utcnow() )
+        assignment = ProjectTasks( project_id=task_data.parent_id, task_id=new_task.id, added_at=datetime.utcnow() )
         sess.add(assignment)
         await sess.commit()
         await sess.refresh(new_task)
