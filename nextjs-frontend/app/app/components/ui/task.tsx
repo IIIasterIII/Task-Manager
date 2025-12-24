@@ -1,7 +1,6 @@
 "use client"
 
-import React, { FC, useState } from 'react'
-import { toggleTaskStatus } from '@/app/actions/taskActions'
+import { FC, useState } from 'react'
 
 interface TaskProps {
   id?: number
@@ -12,26 +11,6 @@ interface TaskProps {
 const Task : FC<TaskProps> = ({title}) => {
     const [completed, setCompleted] = useState(false)
 
-    /*
-    const handleToggle = async () => {
-        const previousStatus = completed
-        const newStatus = !previousStatus
-
-        // 1. Оптимистично меняем в UI
-        setCompleted(newStatus)
-
-        // 2. Запускаем серверное действие
-        startTransition(async () => {
-            const result = await toggleTaskStatus(id, newStatus)
-            
-            if (result?.error) {
-                // 3. Откат при ошибке
-                setCompleted(previousStatus)
-                console.error(result.error)
-            }
-        })
-    }
-    */
     return (
         <div className='w-full h-10 border-b border-gray-500 flex flex-row items-center gap-3 px-2'>
             <div 

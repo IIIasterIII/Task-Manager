@@ -1,10 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import uiReducer from '../features/ui/userSlice';
+import taskReducer from '../features/ui/taskSlice'
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
       ui: uiReducer,
+      task: taskReducer
     },
   });
 };

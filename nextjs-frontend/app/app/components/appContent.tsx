@@ -63,7 +63,7 @@ export default function AppContent({ children }: { children: React.ReactNode }) 
                 {isModalOpen && <TaskCreation key={1}/>}
                 {isCreateProjectOpen && <ProjectCreation/>}
             </AnimatePresence>
-            <main className="flex-1">{children}</main>
+            <main className="w-full h-screen relative overflow-hidden">{children}</main>
         </div>
     );
 }

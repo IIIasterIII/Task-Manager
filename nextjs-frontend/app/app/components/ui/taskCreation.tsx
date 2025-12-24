@@ -3,9 +3,10 @@
 import { motion } from "motion/react";
 import { useAppSelector, useAppDispatch } from "@/app/lib/hook";
 import { toggleModal } from "@/app/features/ui/userSlice";
-import { Priority, Task } from "@/app/types/task"
+import { Priority, Task, TaskDTO } from "@/app/types/task"
 import { startTransition, useEffect, useState } from "react";
 import { createTask } from "@/app/actions/taskActions";
+import { clearTask, confirmTask, setTaskOptimistic } from "@/app/features/ui/taskSlice";
 
 const Ellipsis = () => (
   <svg
@@ -27,6 +28,7 @@ const Ellipsis = () => (
 export default function TaskCreation() {
   const dispatch = useAppDispatch();
   const isPanelId = useAppSelector((state) => state.ui.panel_id)
+  const taskSliceData = useAppSelector((state) => state.task.task)
   const [open, setOpen] = useState(false)
   const [task, setTask] = useState<Task>({
     title: "",
@@ -35,21 +37,29 @@ export default function TaskCreation() {
     parent_id: isPanelId || null
   })
 
-  useEffect(() => {
-    console.log(task)
-  }, [task])
-
   const handleCreateTask = async () => {
+    const tempId = Math.floor(Math.random() * -1000000)
+    const optimisticTask: TaskDTO = {
+      ...task,
+      id: tempId,   
+      isOptimistic: true 
+    };
+
+    dispatch(setTaskOptimistic(optimisticTask))
+
     startTransition(async () => {
       const res = await createTask(task)
+      if(res.success)
+        dispatch(confirmTask(res.data));
+      else
+        dispatch(clearTask())
       console.log(res)
     })
   }
 
   useEffect(() => {
-    console.log(isPanelId)
-  }, [isPanelId])
-
+    console.log(taskSliceData)
+  }, [taskSliceData])
   return (
     <motion.div
       initial={{ opacity: 0, y: 50, scale: 1.2 }}

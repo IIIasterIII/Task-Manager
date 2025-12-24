@@ -10,8 +10,10 @@ from fastapi import HTTPException, status
 from datetime import datetime
 from typing import List
 from ..redis.redis import get_redis
+from fastapi.encoders import jsonable_encoder
 from redis.asyncio import Redis
 import json
+from typing import List
 
 router = APIRouter()
 
@@ -48,6 +50,14 @@ class ProjectDTO(BaseModel):
     parent_id: Optional[int] = None
     model_config = ConfigDict(from_attributes=True)
 
+class TaskDTO(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    priority: str
+    date_at: Optional[str] = None
+    time_at: Optional[str] = None
+
 @router.post("/task", status_code=201)
 async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: User = Depends(get_current_user)):
     print("data", task_data)
@@ -67,11 +77,26 @@ async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: U
         await sess.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     
+
+@router.get("/tasksss/{parent_id}", response_model=List[TaskDTO])
+async def get_tasks(parent_id: int, sess: SessionDep, current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
+    cache_key = f"user:{current_user.id}:parent:{parent_id}:tasks"
+    cached_projects = await redis.get(cache_key)
+    if cached_projects:
+        return json.loads(cached_projects)
+    query = (select(Task).join(ProjectTasks).where(Task.user_id == current_user.id, ProjectTasks.project_id == parent_id))
+    result = await sess.execute(query)
+    tasks = result.scalars().all()
+
+    tasks_data = jsonable_encoder(tasks)
+    await redis.set(cache_key, json.dumps(tasks_data), ex=3600)
+    return tasks
+    
 @router.patch("/tasks/{id}")
 async def complete_task(id: int, sess: SessionDep, current_user: User = Depends(get_current_user)):
     query = select(Task).where(Task.id == id, Task.user_id == current_user.id)
     result = await sess.execute(query)
-    task = result.scalar_one_or_none()
+    task = result.scalar_one_or_none(ProjectTasks).where
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found or access denied")
     task.is_completed = not task.is_completed

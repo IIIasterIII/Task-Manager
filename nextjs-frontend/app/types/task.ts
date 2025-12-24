@@ -13,3 +13,10 @@ export interface Task {
     priority: Priority
     parent_id: number | null
 }
+
+export interface TaskCreate extends Task {}
+
+export interface TaskDTO extends Task {
+    id: number
+    isOptimistic?: boolean
+}

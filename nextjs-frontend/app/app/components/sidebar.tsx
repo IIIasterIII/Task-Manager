@@ -4,6 +4,7 @@ import { startTransition, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useAppDispatch, useAppSelector } from "@/app/lib/hook";
 import { getProjects } from "@/app/actions/projectActions";
+import { useRouter } from "next/navigation";
 
 import HoverPanel from "./ui/sidebarTop";
 import { toggleCreateProject, toggleModal } from "@/app/features/ui/userSlice";
@@ -63,6 +64,7 @@ const ProjectItem = ({
   const hasChildren = children.length > 0
   const dispatch = useAppDispatch()
   const [openPanel, setOpenPanel] = useState<boolean>(false)
+  const router = useRouter()
 
   const handleOpenPanel = () => {
     setOpenPanel(prev => !prev)
@@ -78,8 +80,12 @@ const ProjectItem = ({
       className="flex flex-col w-full text-text-100 relative" 
       onMouseEnter={() => setShowIcons(true)} 
       onMouseLeave={() => setShowIcons(false)} 
-    >
-      {openPanel && <div className="bg-background-900 absolute rounded-[5px] translate-y-10 right-0 z-10 text-text-50 flex items-center justify-center flex-col gap-2 p-5">
+      onClick={(e) => {
+        e.stopPropagation();
+        router.push(`/app/project/${project.id}`);
+      }}
+      >
+      {openPanel && <div onClick={(e) => e.stopPropagation()} className="bg-background-900 absolute rounded-[5px] translate-y-10 right-0 z-10 text-text-50 flex items-center justify-center flex-col gap-2 p-5">
         <button className="cursor-pointer px-5 py-2 rounded-[5px] bg-violet-900 hover:bg-violet-700" onClick={() => dispatch(toggleCreateProject(project.id)) }>Create new project</button>
         <button className="cursor-pointer px-5 py-2 rounded-[5px] bg-violet-900 hover:bg-violet-700" onClick={() => dispatch(toggleModal(project.id))}>Create new task</button>
         </div>}
@@ -127,12 +133,6 @@ const ProjectItem = ({
   );
 };
 
-const Panel = () => {
-  return (
-    <div></div>
-  )
-}
-
 const Sidebar = () => {
   const [close, setClose] = useState(true)
   const [projects, setProjects] = useState<ProjectProps[]>([])
@@ -140,7 +140,8 @@ const Sidebar = () => {
   const isAuthenticated = useAppSelector((state) => state.ui.isAuthenticated)
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) return
+
     startTransition(async () => {
       const res = await getProjects()
       setProjects(res || [])

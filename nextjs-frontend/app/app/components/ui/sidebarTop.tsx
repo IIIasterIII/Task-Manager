@@ -1,7 +1,7 @@
 "use client"
 
 import { useAppDispatch, useAppSelector } from "@/app/lib/hook"
-import { FC, useState } from "react"
+import { FC, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { logout } from "@/app/features/ui/userSlice"
 import { deleteCookie } from "@/app/actions/apiClient"
@@ -22,6 +22,10 @@ const HoverPanel : FC<HoverPanelProps> = ({close, setClose}) => {
     dispath(logout())
     router.replace("/")
   }
+
+  useEffect(() => {
+    console.log(isUserData)
+  }, [isUserData])
 
   const Notification = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
@@ -74,8 +78,8 @@ const HoverPanel : FC<HoverPanelProps> = ({close, setClose}) => {
      {isUserData ? (
         <>
         <div onClick={() => setOpen(!open)} className="flex flex-row gap-2 items-center active:scale-95 select-none cursor-pointer duration-300 hover:bg-indigo-500 p-1 rounded-xl">
-          <img src={isUserData.user_pic} alt="avatar" className="w-10 h-10 border rounded-xl"/>
-          <p className="">{isUserData && isUserData.username}</p>
+          <img src={isUserData.user_pic && isUserData.user_pic} className="w-10 h-10 border rounded-xl"/>
+          <p className="">{isUserData.username}</p>
           <More/>
         </div>
 
