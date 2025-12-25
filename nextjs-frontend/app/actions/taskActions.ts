@@ -13,12 +13,12 @@ export async function toggleTaskStatus(id: number, completed: boolean) {
       body: JSON.stringify({ is_completed: completed }),
     })
 
-    if (!res.ok) return { error: "Ошибка сервера" }
+    if (!res.ok) return { error: "Netword Error" }
     
     revalidatePath("/tasks") 
     return { success: true }
   } catch (e) {
-    return { error: "Сетевая ошибка" }
+    return { error: "Netword Error" }
   }
 }
 
@@ -59,5 +59,25 @@ export const getTasks = async (parent_id: number) => {
     return { data, success: true }
   } catch (err) {
     return { error: "Network connection failed" }
+  }
+}
+
+export const getTasksByDate = async (year: number, month: number) => {
+  const cookieStore = await cookies()
+  const allCookies = cookieStore.toString()
+
+  try {
+    const res = await fetch(`http://localhost:8000/tasks_by_date/${year}/${month}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json", 
+        "Cookie": allCookies 
+      }});
+    
+    if (!res.ok) return { error: "Fild", status: res.status}
+    const data = await res.json();
+    return { data, success: true}
+  } catch (error) {
+    console.error("Error:", error);
   }
 }

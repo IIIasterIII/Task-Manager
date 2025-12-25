@@ -5,6 +5,7 @@ import { FC, useState } from 'react'
 interface TaskProps {
   id?: number
   title: string
+  description?: string
   is_completed?: boolean
 }
 

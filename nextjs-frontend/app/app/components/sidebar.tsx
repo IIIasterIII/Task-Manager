@@ -138,6 +138,7 @@ const Sidebar = () => {
   const [projects, setProjects] = useState<ProjectProps[]>([])
   const [openFolders, setOpenFolders] = useState<number[]>([])
   const isAuthenticated = useAppSelector((state) => state.ui.isAuthenticated)
+  const router = useRouter()
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -203,7 +204,13 @@ const Sidebar = () => {
             </div>
 
             <div className="flex flex-col gap-2 pt-4 border-t border-background-800">
+
+            <button
+              onClick={() => router.push("/app/calendar")}
+              className="flex w-auto px-5 justify-center items-center rounded-md bg-indigo-500 py-1.5 cursor-pointer text-sm/6 duration-300 
+              font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 active:bg-indigo-300">Calendar</button>
             </div>
+            
           </motion.div>
         ) : (
           <motion.div 

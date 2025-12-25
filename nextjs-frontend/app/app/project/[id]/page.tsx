@@ -6,6 +6,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { getTasks } from '@/app/actions/taskActions'
 import { TaskDTO } from '@/app/types/task';
 import { useAppSelector } from '@/app/lib/hook';
+import Task from '../../components/ui/task';
+import BackdropLoading from '@/app/components/ui/backdropLoading';
 
 const Page = () => {
   const [tasks, setTasks] = useState<TaskDTO[]>([])
@@ -32,25 +34,14 @@ const Page = () => {
     setTasks(prev => [...prev, taskDataCreation])
   }, [taskDataCreation])
 
-  useEffect(() => {
-    console.log("Tasks: ", tasks)
-  }, [tasks])
-
-
-  if (isPending) return <div className="animate-pulse">Loading tasks...</div>
-
   return (
     <div className="h-screen relative w-full p-5">
+      <BackdropLoading open={isPending} />
       <h1 className="text-2xl font-bold mb-4 w-full">Project Tasks</h1>
       {tasks.length > 0 ? (
         <div className="grid gap-4 relative h-full overflow-hidden p-10">
           <div className='overflow-y-visible flex flex-col h-auto overflow-hidden gap-10 scroll-smooth'>
-            {tasks.map(task => (
-              <div key={task.id} className="p-4 border rounded-lg hover:shadow-md transition">
-                <h3>{task.title}</h3>
-                <p className="text-gray-400 text-sm">{task.description}</p>
-              </div>
-            ))}
+            {tasks.map(task => <Task key={task.id} title={task.title} description={task.description}/>)}
           </div>
         </div>
       ) : (

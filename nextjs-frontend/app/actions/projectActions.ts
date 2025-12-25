@@ -20,12 +20,12 @@ export async function createProject(data: ProjectData) {
         body: JSON.stringify(data),
       })
   
-      if (!res.ok) return { error: "Ошибка сервера" }
+      if (!res.ok) return { error: "Server error" }
       
       revalidatePath("/tasks") 
       return { success: true }
     } catch (e) {
-      return { error: "Сетевая ошибка" }
+      return { error: "Netword Error" }
     }
   }
 
@@ -38,13 +38,13 @@ export async function getProjects() {
         headers: { "Content-Type": "application/json", "Cookie": allCookies }
       })
   
-      if (!res.ok) return { error: "Ошибка сервера" }
+      if (!res.ok) return { error: "Server error" }
       
       revalidatePath("/tasks") 
 
       const data = await res.json()
       return data
     } catch (e) {
-      return { error: "Сетевая ошибка" }
+      return { error: "Netword Error" }
     }
   }

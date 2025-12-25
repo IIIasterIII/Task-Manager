@@ -10,6 +10,7 @@ import { AnimatePresence } from "motion/react";
 import { setUserData } from "@/app/features/ui/userSlice"
 import { useAppDispatch } from "@/app/lib/hook"
 import ProjectCreation from "./ui/projectCreation";
+import { toast } from "sonner";
 
 export default function AppContent({ children }: { children: React.ReactNode }) {
     const isModalOpen = useAppSelector((state) => state.ui.isModalOpen)
@@ -37,6 +38,9 @@ export default function AppContent({ children }: { children: React.ReactNode }) 
                 if (res.ok && isMounted) {
                     const data = await res.json()
                     dispatch(setUserData(data))
+                    toast.success('Task moved successfully', {
+                        description: 'The date has been updated in the database',
+                      });
                 } else {
                     router.push("/auth")
                 }
