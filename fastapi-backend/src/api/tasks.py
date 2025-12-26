@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict
 from .auth import get_current_user
 from ..db.session import SessionDep
 from typing import Optional
-from src.db.models.users import User, Task, Project, ProjectTasks, Label
+from src.db.models.users import User, Task, Project, ProjectTasks
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from fastapi import HTTPException, status
@@ -12,6 +12,9 @@ from typing import List
 from ..redis.redis import get_redis
 from fastapi.encoders import jsonable_encoder
 from redis.asyncio import Redis
+from datetime import date, time
+from ..actions.actions import add_active_log
+from sqlalchemy import select, extract
 import json
 from typing import List
 
@@ -23,24 +26,13 @@ class ProjectCreate(BaseModel):
     favorite: bool = False
     parent_id: Optional[int] = None
 
-class LabelCreate(BaseModel):
-    title: str
-    color: Optional[str] = None
-    user_id: int
-
 class TaskData(BaseModel):
     title: str
     description: Optional[str] = None
     priority: str
     parent_id: int
-    date_at: Optional[str] = None
-    time_at: Optional[str] = None
-
-class LabelDTO(BaseModel):
-    id: int
-    title: str
-    color: str
-    model_config = ConfigDict(from_attributes=True)
+    date_at: Optional[date] = None
+    time_at: Optional[date] = None
 
 class ProjectDTO(BaseModel):
     id: int
@@ -55,13 +47,13 @@ class TaskDTO(BaseModel):
     title: str
     description: Optional[str] = None
     priority: str
-    date_at: Optional[str] = None
-    time_at: Optional[str] = None
+    date_at: Optional[date] = None
+    time_at: Optional[date] = None
 
 @router.post("/task", status_code=201)
-async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: User = Depends(get_current_user)):
+async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
     print("data", task_data)
-    new_task = Task( title=task_data.title, description=task_data.description, user_id=current_user.id)
+    new_task = Task( title=task_data.title, description=task_data.description, user_id=current_user.id, date_at=task_data.date_at, time_at=task_data.time_at )
     try:
         sess.add(new_task)
         await sess.flush() 
@@ -69,6 +61,7 @@ async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: U
         sess.add(assignment)
         await sess.commit()
         await sess.refresh(new_task)
+        await add_active_log(redis, current_user.id, "Created", "new task")
         return new_task
     except IntegrityError as e:
         await sess.rollback()
@@ -76,7 +69,11 @@ async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: U
     except Exception as e:
         await sess.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+@router.get("/history")
+async def get_history(current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
+    logs = await redis.lrange(f"activity_log:{current_user.id}", 0, -1)
+    return [json.loads(log) for log in logs]
 
 @router.get("/tasksss/{parent_id}", response_model=List[TaskDTO])
 async def get_tasks(parent_id: int, sess: SessionDep, current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
@@ -150,21 +147,54 @@ async def get_projects(sees: SessionDep, current_user: User = Depends(get_curren
     await redis.set(cache_key, json.dumps(projects_data), ex=3600)
     return projects_data
 
-@router.post("/label", response_model=LabelDTO)
-async def create_new_label(data: LabelCreate, sess: SessionDep, current_user: User = Depends(get_current_user)):
-    new_label = Label(
-        title=data.title,
-        color=data.color,
-        user_id=current_user.id
+@router.get("/tasks_by_date/{year}/{month}", response_model=List[TaskDTO])
+async def get_tasks_by_month(
+    year: int, 
+    month: int, 
+    sess: SessionDep, 
+    current_user: User = Depends(get_current_user)
+):
+    query = (
+        select(Task)
+        .where(
+            Task.user_id == current_user.id,
+            extract('month', Task.date_at) == month,
+            extract('year', Task.date_at) == year
+        )
     )
-    try:
-        sess.add(new_label)
-        await sess.commit()
-        await sess.refresh(new_label)
-        return new_label
-    except IntegrityError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Bed request i dont know why lmao")
-    except Exception as e:
-        await sess.rollback()
-        print(f"Unexpected error: {e}")
-        raise HTTPException( status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred on the server" )
+    
+    result = await sess.execute(query)
+    tasks = result.scalars().all()
+    return tasks
+
+@router.delete("/task/{id}")
+async def delete_task_by_id(id: int, sess: SessionDep, current_user: User = Depends(get_current_user)):
+    query = select(Task).where(Task.user_id == current_user.id, Task.id == id)
+    task = sess.execute(query)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    sess.delete(task)
+    sess.commit()
+    return {"success": True, "message": f"Task {id} deleted successfully"}
+
+
+@router.patch("/editTask/{id}")
+async def update_task( id: int, task_data: dict, sess: SessionDep, current_user: User = Depends(get_current_user)):
+    query = select(Task).where(Task.user_id == current_user.id, Task.id == id)
+    db_task = sess.exec(query).first()
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    for key, value in task_data.items():
+        if hasattr(db_task, key):
+            setattr(db_task, key, value)
+    sess.add(db_task)
+    sess.commit()
+    sess.refresh(db_task)
+    return {"success": True, "data": db_task}
+
+class GoalData(BaseModel):
+    ...
+
+@router.post("/goal")
+async def create_goal(data: GoalData, sess: SessionDep, current_user: User = Depends(get_current_user)):
+    ...

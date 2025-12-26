@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 
 import HoverPanel from "./ui/sidebarTop";
 import { toggleCreateProject, toggleModal } from "@/app/features/ui/userSlice";
+import { toast } from "sonner";
 
 const Folder = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
@@ -206,7 +207,22 @@ const Sidebar = () => {
             <div className="flex flex-col gap-2 pt-4 border-t border-background-800">
 
             <button
-              onClick={() => router.push("/app/calendar")}
+              onClick={() => {
+                router.push("/app/goals")
+                toast.success('Task moved successfully', {
+                  description: 'The date has been updated in the database',
+                });
+              }}
+              className="flex w-auto px-5 justify-center items-center rounded-md bg-indigo-500 py-1.5 cursor-pointer text-sm/6 duration-300 
+              font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 active:bg-indigo-300">Goals</button>
+
+            <button
+              onClick={() => {
+                router.push("/app/calendar")
+                toast.success('Task moved successfully', {
+                  description: 'The date has been updated in the database',
+                });
+              }}
               className="flex w-auto px-5 justify-center items-center rounded-md bg-indigo-500 py-1.5 cursor-pointer text-sm/6 duration-300 
               font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 active:bg-indigo-300">Calendar</button>
             </div>
