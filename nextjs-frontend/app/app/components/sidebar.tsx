@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import HoverPanel from "./ui/sidebarTop";
 import { toggleCreateProject, toggleModal } from "@/app/features/ui/userSlice";
 import { toast } from "sonner";
+import { useDispatch } from "react-redux";
 
 const Folder = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
@@ -140,6 +141,7 @@ const Sidebar = () => {
   const [openFolders, setOpenFolders] = useState<number[]>([])
   const isAuthenticated = useAppSelector((state) => state.ui.isAuthenticated)
   const router = useRouter()
+  const dispath = useDispatch()
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -201,6 +203,8 @@ const Sidebar = () => {
                     toggleFolder={toggleFolder}
                   />
                 ))}
+                <div onClick={() => dispath(toggleCreateProject(null))} className="text-text-500 text-xs 
+                font-bold mt-1 cursor-pointer hover:bg-background-900 p-2 rounded-[5] duration-300 select-none active:bg-background-800">Create new project</div>
               </div>
             </div>
 

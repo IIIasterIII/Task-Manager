@@ -33,6 +33,7 @@ class ProjectTasks(Base):
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), primary_key=True)
     task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), primary_key=True)
     added_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    position: Mapped[float] = mapped_column(nullable=False, default=0.0)
     task: Mapped["Task"] = relationship(back_populates="task_links")
     project: Mapped["Project"] = relationship(back_populates="project_links")
 
@@ -50,10 +51,10 @@ class Project(Base):
     project_links: Mapped[List["ProjectTasks"]] = relationship(back_populates="project")
 
 class TaskPriority(enum.Enum):
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-    URGENT = "urgent"
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    URGENT = "URGENT"
 
 class Task(Base):
     __tablename__ = "tasks"

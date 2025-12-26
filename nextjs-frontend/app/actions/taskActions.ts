@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { Task } from "../types/task"
 import { cookies } from "next/headers"
 import { cache } from "react"
+import { goalDataToSend } from '../app/goals/page';
 
 export async function toggleTaskStatus(id: number, completed: boolean) {
   try {
@@ -25,6 +26,7 @@ export async function toggleTaskStatus(id: number, completed: boolean) {
 export async function createTask(data: Task) {
   const cookieStore = await cookies()
   const allCookies = cookieStore.toString()
+  console.log("TASk!!!", data)
   try {
     const res = await fetch("http://localhost:8000/task", {
       method: "POST",
@@ -81,3 +83,59 @@ export const getTasksByDate = async (year: number, month: number) => {
     console.error("Error:", error);
   }
 }
+
+export const createGoal = async (data: goalDataToSend) => {
+  const cookieStore = await cookies()
+  const allCookies = cookieStore.toString()
+  try {
+    const res = await fetch(`http://localhost:8000/goal`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json", 
+        "Cookie": allCookies
+      },
+      body: JSON.stringify(data)
+      });
+      if (!res.ok) return { error: "Fild", status: res.status}
+      const ress = await res.json();
+      return { ress, success: true}
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
+
+  export const getGoals = async () => {
+    const cookieStore = await cookies()
+    const allCookies = cookieStore.toString()
+    try {
+      const res = await fetch(`http://localhost:8000/goals`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json", 
+          "Cookie": allCookies
+        } });
+        if (!res.ok) return { error: "Fild", status: res.status}
+        const ress = await res.json();
+        return ress
+      } catch (error) {
+        console.error("Error:", error);
+      }
+  }
+
+  export const getGoal = async (goal_id: number) => {
+    const cookieStore = await cookies()
+    const allCookies = cookieStore.toString()
+    try {
+      const res = await fetch(`http://localhost:8000/goal/${goal_id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json", 
+          "Cookie": allCookies
+        } });
+        if (!res.ok) return { error: "Fild", status: res.status}
+        const ress = await res.json();
+        return ress
+      } catch (error) {
+        console.error("Error:", error);
+      }
+  }

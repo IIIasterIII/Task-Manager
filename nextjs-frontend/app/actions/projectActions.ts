@@ -13,6 +13,7 @@ export interface ProjectData {
 export async function createProject(data: ProjectData) {
     const cookieStore = await cookies()
     const allCookies = cookieStore.toString()
+    console.log("Data:", data)
     try {
       const res = await fetch(`http://localhost:8000/project`, {
         method: "POST",
@@ -43,6 +44,7 @@ export async function getProjects() {
       revalidatePath("/tasks") 
 
       const data = await res.json()
+      console.log(data)
       return data
     } catch (e) {
       return { error: "Netword Error" }

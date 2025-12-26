@@ -88,7 +88,7 @@ const HoverPanel : FC<HoverPanelProps> = ({close, setClose}) => {
       </>
       ) : <Skeleton/>}
       {open && <div className="absolute w-80 z-10 p-5 rounded-xl bg-indigo-50 top-0 translate-y-15 text-gray-600">
-          <button className="flex flex-row items-center gap-2 duration-300 hover:bg-gray-300 cursor-pointer px-2 py-2 rounded-xl w-full"><Setting/>Setting</button>
+          <button onClick={() => router.push("/app/profile")} className="flex flex-row items-center gap-2 duration-300 hover:bg-gray-300 cursor-pointer px-2 py-2 rounded-xl w-full"><Setting/>Setting</button>
           <hr className="my-1"/>
           <button className="flex flex-row items-center gap-2 duration-300 hover:bg-gray-300 cursor-pointer px-2 py-2 rounded-xl w-full" onClick={handleLogout}><Logout/> Log out</button>
         </div>}

@@ -14,7 +14,6 @@ const Page = () => {
   const [isPending, startTransition] = useTransition()
   const taskDataCreation = useAppSelector((state) => state.task.task)
   const params = useParams()
-  const router = useRouter()
   const projectId = Number(params.id)
 
   useEffect(() => {
@@ -29,6 +28,10 @@ const Page = () => {
   }, [projectId])
 
   useEffect(() => {
+    console.log(tasks)
+  }, [tasks])
+
+  useEffect(() => {
     if(taskDataCreation?.parent_id != projectId) return
 
     setTasks(prev => [...prev, taskDataCreation])
@@ -41,7 +44,7 @@ const Page = () => {
       {tasks.length > 0 ? (
         <div className="grid gap-4 relative h-full overflow-hidden p-10">
           <div className='overflow-y-visible flex flex-col h-auto overflow-hidden gap-10 scroll-smooth'>
-            {tasks.map(task => <Task key={task.id} title={task.title} description={task.description}/>)}
+            {tasks.map(task => <Task key={task.id} data={task}/>)}
           </div>
         </div>
       ) : (
