@@ -8,14 +8,15 @@ import { motion } from "motion/react"
 import { deleteTask, togglePinTask } from '@/app/actions/taskActions'
 
 interface Props {
-  initialTasks: TaskDTO[]
+  initialTasks: TaskDTO[],
+  initialPinnedTasks: TaskDTO[],
   projectId: number
 }
 
-export default function TaskListClient({ initialTasks, projectId }: Props) {
+export default function TaskListClient({ initialTasks, initialPinnedTasks, projectId }: Props) {
   const [tasks, setTasks] = useState<TaskDTO[]>(initialTasks)
   const taskDataCreation = useAppSelector((state) => state.task.task)
-  const [pinned, setPinned] = useState<TaskDTO[]>([])
+  const [pinned, setPinned] = useState<TaskDTO[]>(initialPinnedTasks)
 
   useEffect(() => {
     if (!taskDataCreation || taskDataCreation.parent_id !== projectId) return
@@ -24,10 +25,6 @@ export default function TaskListClient({ initialTasks, projectId }: Props) {
       return [...prev, taskDataCreation]
     })
   }, [taskDataCreation, projectId])
-
-  if (tasks.length === 0) {
-    return <p className="text-zinc-500 italic">No tasks found in this project.</p>
-  }
 
   const handlePinTask = (taskToPin: TaskDTO) => {
     const isAlreadyPinned = pinned.some(x => x.id === taskToPin.id);
@@ -52,15 +49,19 @@ export default function TaskListClient({ initialTasks, projectId }: Props) {
     });
   };
 
+  if (tasks.length === 0) {
+    return <p className="text-zinc-500 italic">No tasks found in this project.</p>
+  }
+
   return (
     <div className="grid gap-4 relative h-full overflow-hidden">
-      <div className='overflow-y-auto flex flex-col h-full gap-3 pb-20 scroll-smooth custom-scrollbar'>
-        <div className="grid gap-4 relative h-full">
+      <div className='overflow-y-auto flex flex-col h-full gap-3 pb-20 scroll-smooth custom-scrollbar relative'>
+        <div className="flex flex-col gap-5 relative h-full p-5">
           {pinned.length > 0 && (
-            <div className="flex flex-col gap-3 border-b border-zinc-800 pb-4">
+            <div className="flex flex-col border-b border-zinc-800 pb-4 mb-5 h-100">
               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-2">Pinned</p>
               {pinned.map((task, i) => (
-                <Task key={task.id-i} data={task} index={i} tasks={pinned} setTasks={setPinned} setPinned={setPinned} pinned={pinned} handlePinTask={handlePinTask} handleDelete={handleDelete}/>
+                <Task key={`pinned-${task.id}`} data={task} index={i} tasks={pinned} setTasks={setPinned} setPinned={setPinned} pinned={pinned} handlePinTask={handlePinTask} handleDelete={handleDelete} parentId={projectId}/>
               ))}
             </div>
           )}
@@ -74,7 +75,7 @@ export default function TaskListClient({ initialTasks, projectId }: Props) {
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 500, damping: 30, mass: 1 }}
             >
-              <Task data={task} index={i} tasks={tasks} setTasks={setTasks} setPinned={setPinned} pinned={pinned} handlePinTask={handlePinTask} handleDelete={handleDelete}/>
+              <Task data={task} index={i} tasks={tasks} setTasks={setTasks} setPinned={setPinned} pinned={pinned} handlePinTask={handlePinTask} handleDelete={handleDelete} parentId={projectId}/>
             </motion.div>
           ))}
         </div>

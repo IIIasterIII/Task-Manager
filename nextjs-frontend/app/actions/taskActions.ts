@@ -34,10 +34,10 @@ export async function toggleTaskStatus(id: number, completed: boolean) {
   }
 }
 
-export async function createTask(data: Task) {
+export async function createTask(data: TaskCreate) {
   const cookieStore = await cookies()
   const allCookies = cookieStore.toString()
-  console.log("TASk!!!", data)
+  console.log(data)
   try {
     const res = await fetch("http://localhost:8000/task", {
       method: "POST",
@@ -73,6 +73,20 @@ export const getTasks = async (parent_id: number) => {
   } catch (err) {
     return { error: "Network connection failed" }
   }
+}
+
+export const getPinnedTaskIds = async () => {
+  try {
+      const res = await fetch(`${BASE_URL}/tasks/pinned`, {
+          method: "GET",
+          headers: await getHeaders()
+      })
+      if (!res.ok) return { error: "Failed to fetch tasks", status: res.status }
+      const data = await res.json()
+      return { data, success: true }
+  } catch (err) { 
+    return { error: "Network connection failed" }
+   }
 }
 
 export const getTasksByDate = async (year: number, month: number) => {
@@ -226,14 +240,24 @@ export const togglePinTask = async (taskId: number, toPin: boolean) => {
   }
 }
 
-export const getPinnedTaskIds = async () => {
+export const updateTaskDetails = async (
+  taskId: number, 
+  details: { title?: string; description?: string }
+) => {
   try {
-      const res = await fetch(`${BASE_URL}/tasks/pinned`, {
-          method: "GET",
-          headers: await getHeaders()
+      const res = await fetch(`${BASE_URL}/tasks/${taskId}/details`, {
+          method: "PATCH",
+          headers: await getHeaders(),
+          body: JSON.stringify(details)
       })
-      if (!res.ok) return { pinned_ids: [] }
-      const data = await res.json()
-      return data.pinned_ids as number[]
-  } catch (err) { return [] }
+
+      if (!res.ok) {
+          const error = await res.json()
+          return { error: error.detail || "Failed to update details" }
+      }
+
+      return await res.json()
+  } catch (err) {
+      return { error: "Network error" }
+  }
 }

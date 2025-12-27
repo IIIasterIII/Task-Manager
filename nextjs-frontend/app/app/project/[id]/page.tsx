@@ -1,16 +1,25 @@
-import { getTasks } from '@/app/actions/taskActions'
+import { getPinnedTaskIds, getTasks } from '@/app/actions/taskActions'
 import TaskListClient from './taskListClient'
+import { TaskDTO } from '@/app/types/task';
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }>}) {
   const resolvedParams = await params;
   const projectId = Number(resolvedParams.id);
-  const res = await getTasks(projectId);
-  const initialTasks = res.success && res.data ? res.data : [];
+  const [res, resPinnedIds] = await Promise.all([ getTasks(projectId), getPinnedTaskIds() ]);
+  console.log("Response from Redis:", resPinnedIds);
+  const allTasks: TaskDTO[] = res.success && res.data ? res.data : [];
+  const pinnedIds: number[] = resPinnedIds?.data?.pinned_ids || [];
+  const initialPinnedTasks = allTasks.filter(task => pinnedIds.includes(task.id));
+  const initialTasks = allTasks.filter(task => !pinnedIds.includes(task.id))
 
   return (
     <div className="h-screen relative w-full p-5">
       <h1 className="text-2xl font-bold mb-4 w-full">Project Tasks</h1>
-      <TaskListClient initialTasks={initialTasks} projectId={projectId} />
+      <TaskListClient 
+        initialTasks={initialTasks} 
+        initialPinnedTasks={initialPinnedTasks} 
+        projectId={projectId} 
+      />
     </div>
   )
 }

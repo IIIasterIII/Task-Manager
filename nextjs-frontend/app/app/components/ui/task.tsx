@@ -1,10 +1,12 @@
 "use client"
 
 import { FC, useState, useRef, useEffect, startTransition, SetStateAction, Dispatch } from 'react'
-import { Calendar, Clock, MoreVertical, ArrowUp, ArrowDown, Pencil, Copy, Trash2, Pin, ChevronRight, CalendarDays, Sun, Ban, Sparkles, ShieldAlert, ShieldCheck, Shield, Zap } from 'lucide-react'
-import { createTask, moveTask, updateTaskPriority, updateTaskSchedule } from '@/app/actions/taskActions'
-import { motion } from "motion/react"
+import { Calendar, Clock, MoreVertical, ArrowUp, ArrowDown, Pencil, Copy, Trash2, Pin, ChevronRight, CalendarDays, Sun, Ban, Sparkles, ShieldAlert, ShieldCheck, Shield, Zap, Check, X } from 'lucide-react'
+import { createTask, moveTask, updateTaskDetails, updateTaskPriority, updateTaskSchedule } from '@/app/actions/taskActions'
+// Добавь экшен updateTaskDetails в свой файл actions
+// import { updateTaskDetails } from '@/app/actions/taskActions' 
 import { Priority, TaskCreate, TaskDTO } from '@/app/types/task'
+import { renderToPipeableStream } from 'react-dom/server'
 
 interface TaskProps {
     data: TaskDTO,
@@ -14,13 +16,42 @@ interface TaskProps {
     pinned: TaskDTO[]
     setPinned: Dispatch<SetStateAction<TaskDTO[]>>,
     handlePinTask: (x: TaskDTO) => void,
-    handleDelete: (x: TaskDTO) => void
+    handleDelete: (x: TaskDTO) => void,
+    parentId: number
 }
 
-const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, handlePinTask, handleDelete }) => {
+const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, handlePinTask, handleDelete, parentId }) => {
     const [completed, setCompleted] = useState(false)
     const [open, setOpen] = useState(false)
+    const [isEditing, setIsEditing] = useState(false)
+    const [editedTitle, setEditedTitle] = useState(data.title)
+    
     const menuRef = useRef<HTMLDivElement>(null)
+    const editInputRef = useRef<HTMLInputElement>(null)
+    const [dropUp, setDropUp] = useState(false);
+
+    const toggleMenu = (e: React.MouseEvent) => {
+    if (!open) {
+        // Проверяем, сколько места осталось до низа экрана
+        const rect = e.currentTarget.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        
+        // Если места меньше 400px (высота меню примерно такая), открываем вверх
+        if (spaceBelow < 400) {
+            setDropUp(true);
+        } else {
+            setDropUp(false);
+        }
+    }
+    setOpen(!open);
+    };
+
+    useEffect(() => {
+        if (isEditing) {
+            editInputRef.current?.focus()
+            editInputRef.current?.select()
+        }
+    }, [isEditing])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -30,6 +61,29 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
         document.addEventListener('mousedown', handleClickOutside)
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
+
+    const handleSaveTitle = () => {
+        if (editedTitle.trim() === "" || editedTitle === data.title) {
+            setIsEditing(false)
+            setEditedTitle(data.title)
+            return
+        }
+
+        setTasks(prev => prev.map(t => t.id === data.id ? { ...t, title: editedTitle } : t))
+        setIsEditing(false)
+
+        startTransition(async () => {
+            await updateTaskDetails(data.id, { title: editedTitle })
+        })
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') handleSaveTitle()
+        if (e.key === 'Escape') {
+            setIsEditing(false)
+            setEditedTitle(data.title)
+        }
+    }
 
     const priorityColors = {
         LOW: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
@@ -46,10 +100,10 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
     }
 
     const priorityColorsCompleted = {
-        LOW: 'bg-blue-600 border-blue-600  shadow-[0_0_15px_rgba(124,58,237,0.4)]',
-        MEDIUM: 'bg-orange-600 border-orange-600  shadow-[0_0_15px_rgba(124,58,237,0.4)]',
-        HIGH: 'bg-red-600 border-red-600  shadow-[0_0_15px_rgba(124,58,237,0.4)]',
-        URGENT: 'bg-violet-600 border-violet-600  shadow-[0_0_15px_rgba(124,58,237,0.4)]',
+        LOW: 'bg-blue-600 border-blue-600 shadow-[0_0_15px_rgba(124,58,237,0.4)]',
+        MEDIUM: 'bg-orange-600 border-orange-600 shadow-[0_0_15px_rgba(124,58,237,0.4)]',
+        HIGH: 'bg-red-600 border-red-600 shadow-[0_0_15px_rgba(124,58,237,0.4)]',
+        URGENT: 'bg-violet-600 border-violet-600 shadow-[0_0_15px_rgba(124,58,237,0.4)]',
     }
 
     const dateInputRef = useRef<HTMLInputElement>(null);
@@ -121,8 +175,6 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
             const result = await updateTaskSchedule(data.id, newDate, newTime);
             if (result.error) {
                 console.error("Error data request:", result.error);
-            } else {
-                console.log("Yeah!! We got it!");
             }
         });
     };
@@ -131,11 +183,12 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
         const newTask : TaskCreate = {
             title: data.title,
             priority: data.priority,
-            parent_id: data.parent_id
+            parent_id: parentId
         }
+        console.log(newTask)
         startTransition(async () => {
             const res = await createTask(newTask)
-            console.log(res)
+            if(res.data) setTasks([...tasks, res.data])
         })
     }
 
@@ -180,14 +233,30 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
 
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                 <div className="flex items-center gap-3">
-                    <p className={`font-medium text-[15px] truncate transition-all duration-500 select-none ${completed ? 'line-through text-zinc-600' : 'text-zinc-100'}`}>
-                        {data.title}
-                    </p>
+                    {isEditing ? (
+                        <div className="flex items-center gap-2 flex-1 animate-in fade-in duration-300">
+                            <input
+                                ref={editInputRef}
+                                type="text"
+                                value={editedTitle}
+                                onChange={(e) => setEditedTitle(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                onBlur={handleSaveTitle}
+                                className="bg-zinc-950/50 border border-white/10 rounded-lg px-2 py-1 text-[15px] text-zinc-100 outline-none focus:border-violet-500/50 w-full"
+                            />
+                        </div>
+                    ) : (
+                        <p className={`font-medium text-[15px] truncate transition-all duration-500 select-none ${completed ? 'line-through text-zinc-600' : 'text-zinc-100'}`}>
+                            {data.title}
+                        </p>
+                    )}
                     
-                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border animate-in fade-in slide-in-from-left-2 ${priorityColors[data.priority]}`}>
-                        <div className="w-1 h-1 rounded-full bg-currentColor shadow-[0_0_5px_currentColor]" />
-                        {data.priority}
-                    </div>
+                    {!isEditing && (
+                        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border animate-in fade-in slide-in-from-left-2 ${priorityColors[data.priority]}`}>
+                            <div className="w-1 h-1 rounded-full bg-currentColor shadow-[0_0_5px_currentColor]" />
+                            {data.priority}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-3 text-[12px]">
@@ -214,11 +283,19 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
                     </div>
                 </div>
             </div>
-            <button title="Setting" className={`p-2 rounded-xl transition-all duration-300 cursor-pointer ${ priorityColors[data.priority] } bg-zinc-900 hover:bg-zinc-800`} onClick={() => setOpen(!open)}><MoreVertical size={18}/></button>
+            
+            <button 
+                title="Setting" 
+                className={`p-2 rounded-xl transition-all duration-300 cursor-pointer ${ priorityColors[data.priority] } bg-zinc-900 hover:bg-zinc-800`} 
+                onClick={toggleMenu} // Используем новую функцию
+            >
+                <MoreVertical size={18}/>
+            </button>
+
             {open && (
                 <div 
                     ref={menuRef}
-                    className="absolute right-0 top-full mt-2 w-64 bg-zinc-900 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right"
+                    className={`absolute right-0 w-64 bg-zinc-900 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl z-100 animate-in fade-in zoom-in-95 duration-200 ${dropUp ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right' }`}
                 >
                     <div className="px-3 py-1.5">
                         <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]">Navigation</p>
@@ -232,43 +309,25 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
                         <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]">Schedule</p>
                     </div>
                         <div className="grid grid-cols-4 gap-1 px-1 mb-2">
-                            <button 
-                                title="Today" 
-                                onClick={() => handleQuickDate('today')}
-                                className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-violet-500/20 text-violet-400 transition-all border border-transparent hover:border-violet-500/30"
-                            >
+                            <button title="Today" onClick={() => handleQuickDate('today')} className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-violet-500/20 text-violet-400 transition-all border border-transparent hover:border-violet-500/30">
                                 <Sparkles size={16} />
                             </button>
-
-                            <button 
-                                title="Tomorrow" 
-                                onClick={() => handleQuickDate('tomorrow')}
-                                className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-orange-500/20 text-orange-400 transition-all border border-transparent hover:border-orange-500/30"
-                            >
+                            <button title="Tomorrow" onClick={() => handleQuickDate('tomorrow')} className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-orange-500/20 text-orange-400 transition-all border border-transparent hover:border-orange-500/30">
                                 <Sun size={16} />
                             </button>
-
-                            <button 
-                                title="This Weekend (Saturday)" 
-                                onClick={() => handleQuickDate('weekend')}
-                                className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-sky-500/20 text-sky-400 transition-all border border-transparent hover:border-sky-500/30"
-                            >
+                            <button title="This Weekend" onClick={() => handleQuickDate('weekend')} className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-sky-500/20 text-sky-400 transition-all border border-transparent hover:border-sky-500/30">
                                 <CalendarDays size={16} />
                             </button>
-
-                            <button 
-                                title="No Date" 
-                                onClick={() => handleQuickDate('none')}
-                                className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-zinc-700 text-zinc-500 transition-all border border-transparent hover:border-zinc-600"
-                            >
+                            <button title="No Date" onClick={() => handleQuickDate('none')} className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-zinc-700 text-zinc-500 transition-all border border-transparent hover:border-zinc-600">
                                 <Ban size={16} />
                             </button>
                         </div>
                         <>
-                            <input type="date" ref={dateInputRef} onChange={onDateChange} className="hidden relative" />
-                            <div ref={menuRef} className="..."><ActionButton icon={Calendar} label="Pick custom date" onClick={handleCustomDateClick} /></div>
+                            <input type="date" ref={dateInputRef} onChange={onDateChange} className="hidden" />
+                            <ActionButton icon={Calendar} label="Pick custom date" onClick={handleCustomDateClick} />
                         </>
                     <div className="h-[1] bg-white/5 my-2 mx-2" />
+                    
                     <div className="px-3 py-1.5">
                         <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]">Priority</p>
                     </div>
@@ -290,13 +349,7 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
                                         ${isActive ? `bg-white/10 shadow-inner ${item.color} opacity-100` : 'text-zinc-500 opacity-40 hover:opacity-100'}`}
                                     onClick={() => updateTaskInState(item.p as Priority)}
                                 >
-                                    <item.icon 
-                                        size={16} 
-                                        strokeWidth={isActive ? 2.5 : 2}
-                                        className="transition-transform duration-200"
-                                        fill={isActive ? "currentColor" : "none"}
-                                        fillOpacity={0.2}
-                                    />
+                                    <item.icon size={16} strokeWidth={isActive ? 2.5 : 2} fill={isActive ? "currentColor" : "none"} fillOpacity={0.2} />
                                 </button>
                             );
                         })}
@@ -305,7 +358,16 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
                     <div className="px-3 py-1.5">
                         <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]">Actions</p>
                     </div>
-                    <ActionButton icon={Pencil} label="Edit details" onClick={() => {}}/>
+                    
+                    <ActionButton 
+                        icon={Pencil} 
+                        label="Edit details" 
+                        onClick={() => {
+                            setIsEditing(true);
+                            setOpen(false);
+                        }}
+                    />
+                    
                     <ActionButton icon={Copy} label="Duplicate" onClick={handleDuplicate} />
                     <ActionButton icon={Pin} label="Pin task" onClick={() => handlePinTask(data)}/>
                     <div className="h-[1] bg-white/5 my-2 mx-2" />
@@ -313,7 +375,7 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
                         icon={Trash2} 
                         label="Delete task" 
                         variant="danger" 
-                        onClick={() => {handleDelete(data)}} 
+                        onClick={() => handleDelete(data)} 
                     />
                 </div>
             )}

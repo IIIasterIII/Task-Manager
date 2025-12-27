@@ -5,11 +5,13 @@ import { AnimatePresence, motion } from "motion/react";
 import { useAppDispatch, useAppSelector } from "@/app/lib/hook";
 import { getProjects } from "@/app/actions/projectActions";
 import { useRouter } from "next/navigation";
+import { Sun, Moon } from "lucide-react"
 
 import HoverPanel from "./ui/sidebarTop";
 import { toggleCreateProject, toggleModal } from "@/app/features/ui/userSlice";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
+import { useTheme } from "next-themes";
 
 const Folder = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
@@ -142,6 +144,7 @@ const Sidebar = () => {
   const isAuthenticated = useAppSelector((state) => state.ui.isAuthenticated)
   const router = useRouter()
   const dispath = useDispatch()
+  const { theme, setTheme } = useTheme()
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -207,6 +210,14 @@ const Sidebar = () => {
                 font-bold mt-1 cursor-pointer hover:bg-background-900 p-2 rounded-[5] duration-300 select-none active:bg-background-800">Create new project</div>
               </div>
             </div>
+
+            <button 
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 transition-all"
+            >
+              <Sun className="h-5 w-5 hidden dark:block text-yellow-400" />
+              <Moon className="h-5 w-5 block dark:hidden text-zinc-600" />
+            </button>
 
             <div className="flex flex-col gap-2 pt-4 border-t border-background-800">
 

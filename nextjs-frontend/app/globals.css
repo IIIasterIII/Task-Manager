@@ -26,11 +26,23 @@
   --color-background-900: #1a1a1a; --color-background-950: #0d0d0d;
 }
 
+:root {
+  --bg-main: var(--color-background-50);
+  --text-main: var(--color-text-950);
+}
+
+.dark {
+  --bg-main: var(--color-background-950);
+  --text-main: var(--color-text-300);
+}
+
 @layer base {
   body {
-    background-color: var(--color-background-950);
-    color: var(--color-text-50);
+    /* 3. ИСПОЛЬЗУЕМ ПЕРЕМЕННЫЕ, КОТОРЫЕ МЕНЯЮТСЯ */
+    background-color: var(--bg-main);
+    color: var(--text-main);
     font-family: var(--font-body);
+    transition: background-color 0.3s ease, color 0.3s ease; /* Плавный переход */
     @apply antialiased;
   }
 }

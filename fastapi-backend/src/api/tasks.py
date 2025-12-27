@@ -304,6 +304,7 @@ async def get_pinned_tasks( current_user: User = Depends(get_current_user), redi
     redis_key = f"user_pins:{current_user.id}"
     pinned_ids = await redis.smembers(redis_key)
     pinned_ids = [int(id) for id in pinned_ids]
+    print(pinned_ids)
     return {"pinned_ids": pinned_ids}
 
 class TaskScheduleUpdate(BaseModel):
@@ -323,6 +324,26 @@ async def patch_task_schedule( task_id: int, data: TaskScheduleUpdate, sess: Ses
     await sess.commit()
     await sess.refresh(task)
     return { "success": True, "date_at": task.date_at, "time_at": task.time_at }
+
+class TaskDetailsUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+
+@router.patch("/tasks/{task_id}/details")
+async def patch_task_details( task_id: int, data: TaskDetailsUpdate, sess: SessionDep, current_user: User = Depends(get_current_user) ):
+    query = select(Task).where(Task.id == task_id, Task.user_id == current_user.id)
+    res = await sess.execute(query)
+    task = res.scalar_one_or_none()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if data.title is not None:
+        task.title = data.title
+    if data.description is not None:
+        task.description = data.description
+    sess.add(task)
+    await sess.commit()
+    await sess.refresh(task)
+    return {"success": True, "task": task}
 
 @router.post("/goal")
 async def create_goal(data: GoalData, sess: SessionDep, current_user: User = Depends(get_current_user)):
