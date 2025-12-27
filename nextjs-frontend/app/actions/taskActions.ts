@@ -5,6 +5,17 @@ import { Task } from "../types/task"
 import { cookies } from "next/headers"
 import { cache } from "react"
 import { goalDataToSend } from '../app/goals/page';
+import { Priority, TaskCreate } from "@/app/types/task"
+
+const BASE_URL = "http://localhost:8000"
+
+const getHeaders = async () => {
+    const cookieStore = await cookies()
+    return {
+        "Content-Type": "application/json",
+        "Cookie": cookieStore.toString()
+    }
+}
 
 export async function toggleTaskStatus(id: number, completed: boolean) {
   try {
@@ -104,38 +115,125 @@ export const createGoal = async (data: goalDataToSend) => {
     }
 }
 
-  export const getGoals = async () => {
-    const cookieStore = await cookies()
-    const allCookies = cookieStore.toString()
-    try {
-      const res = await fetch(`http://localhost:8000/goals`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json", 
-          "Cookie": allCookies
-        } });
-        if (!res.ok) return { error: "Fild", status: res.status}
-        const ress = await res.json();
-        return ress
-      } catch (error) {
-        console.error("Error:", error);
-      }
-  }
+export const getGoals = async () => {
+  const cookieStore = await cookies()
+  const allCookies = cookieStore.toString()
+  try {
+    const res = await fetch(`http://localhost:8000/goals`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json", 
+        "Cookie": allCookies
+      } });
+      if (!res.ok) return { error: "Fild", status: res.status}
+      const ress = await res.json();
+      return ress
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
 
-  export const getGoal = async (goal_id: number) => {
-    const cookieStore = await cookies()
-    const allCookies = cookieStore.toString()
+export const getGoal = async (goal_id: number) => {
+  const cookieStore = await cookies()
+  const allCookies = cookieStore.toString()
+  try {
+    const res = await fetch(`http://localhost:8000/goal/${goal_id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json", 
+        "Cookie": allCookies
+      } });
+      if (!res.ok) return { error: "Fild", status: res.status}
+      const ress = await res.json();
+      return ress
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
+
+export const moveTask = async (direction: "up" | "down", project_id: number, task_id: number) => {
+  const cookieStore = await cookies()
+  const allCookies = cookieStore.toString()
+  try {
+    const res = await fetch(`http://localhost:8000/tasks/move/${project_id}/${task_id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json", 
+        "Cookie": allCookies
+      },
+      body: JSON.stringify({ direction: direction })
+    });
+      if (!res.ok) return { error: "Fild", status: res.status}
+      const ress = await res.json();
+      return ress
+    } catch (error) {
+      console.error("Error:", error);
+    }
+}
+
+export const updateTaskPriority = async (taskId: number, priority: Priority) => {
+    console.log(priority)
     try {
-      const res = await fetch(`http://localhost:8000/goal/${goal_id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json", 
-          "Cookie": allCookies
-        } });
-        if (!res.ok) return { error: "Fild", status: res.status}
-        const ress = await res.json();
-        return ress
-      } catch (error) {
-        console.error("Error:", error);
+        const res = await fetch(`${BASE_URL}/tasks/${taskId}/priority`, {
+            method: "PATCH",
+            headers: await getHeaders(),
+            body: JSON.stringify({ priority })
+        })
+        if (!res.ok) return { error: "Failed to update priority" }
+        return await res.json()
+    } catch (err) { return { error: "Network error" } }
+}
+
+export const updateTaskSchedule = async (taskId: number, date_at?: string, time_at?: string) => {
+    try {
+        const res = await fetch(`${BASE_URL}/tasks/${taskId}/schedule`, {
+            method: "PATCH",
+            headers: await getHeaders(),
+            body: JSON.stringify({ date_at, time_at })
+        })
+        if (!res.ok) return { error: "Failed to update schedule" }
+        return await res.json()
+    } catch (err) { return { error: "Network error" } }
+}
+
+export const deleteTask = async (taskId: number) => {
+    try {
+        const res = await fetch(`${BASE_URL}/tasks/${taskId}/delete`, {
+            method: "DELETE",
+            headers: await getHeaders()
+        })
+        if (!res.ok) return { error: "Failed to delete task" }
+        return { success: true }
+    } catch (err) { return { error: "Network error" } }
+}
+
+export const togglePinTask = async (taskId: number, toPin: boolean) => {
+  try {
+      const res = await fetch(`${BASE_URL}/tasks/${taskId}/pin`, {
+          method: "PATCH",
+          headers: await getHeaders(),
+          body: JSON.stringify({ toPin })
+      })
+
+      if (!res.ok) {
+          const error = await res.json()
+          return { error: error.detail || "Failed to toggle pin" }
       }
+
+      return await res.json()
+  } catch (err) { 
+      return { error: "Network error" } 
   }
+}
+
+export const getPinnedTaskIds = async () => {
+  try {
+      const res = await fetch(`${BASE_URL}/tasks/pinned`, {
+          method: "GET",
+          headers: await getHeaders()
+      })
+      if (!res.ok) return { pinned_ids: [] }
+      const data = await res.json()
+      return data.pinned_ids as number[]
+  } catch (err) { return [] }
+}

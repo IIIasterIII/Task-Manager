@@ -31,7 +31,7 @@ class Profile(Base):
 class ProjectTasks(Base):
     __tablename__ = "project_tasks"
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), primary_key=True)
-    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), primary_key=True)
+    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"), primary_key=True)
     added_at: Mapped[datetime] = mapped_column(server_default=func.now())
     position: Mapped[float] = mapped_column(nullable=False, default=0.0)
     task: Mapped["Task"] = relationship(back_populates="task_links")
@@ -66,7 +66,7 @@ class Task(Base):
     priority: Mapped[TaskPriority] = mapped_column(Enum(TaskPriority), default=TaskPriority.LOW)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(back_populates="tasks")
-    task_links: Mapped[List["ProjectTasks"]] = relationship(back_populates="task")
+    task_links: Mapped[List["ProjectTasks"]] = relationship(back_populates="task", cascade="all, delete-orphan", passive_deletes=True)
 
 class GoalTaskType(enum.Enum):
     BOOLEAN = "boolean"

@@ -58,7 +58,18 @@ class TaskDTO(BaseModel):
     description: Optional[str] = None
     priority: str
     date_at: Optional[date] = None
-    time_at: Optional[date] = None
+    time_at: Optional[time] = None
+
+@router.delete("/tasks/{id}/delete")
+async def delete_task_by_id(id: int, sess: SessionDep, current_user: User = Depends(get_current_user)):
+    query = select(Task).where(Task.user_id == current_user.id, Task.id == id)
+    result = await sess.execute(query)
+    task = result.scalar_one_or_none()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    await sess.delete(task)
+    await sess.commit()
+    return {"success": True}
 
 @router.post("/task", status_code=201)
 async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
@@ -102,12 +113,13 @@ async def get_history(current_user: User = Depends(get_current_user), redis: Red
     return [json.loads(log) for log in logs]
 
 @router.patch("/tasks/move/{project_id}/{task_id}")
-async def move_task(project_id: int, task_id: int, direction: str, sess: SessionDep, current_user: User = Depends(get_current_user)):
+async def move_task(project_id: int, task_id: int, data: TaskPriorityRequest, sess: SessionDep, current_user: User = Depends(get_current_user)):
     query = select(ProjectTasks).where( ProjectTasks.task_id == task_id, ProjectTasks.project_id == project_id )
     result = await sess.execute(query)
     current_rel = result.scalar_one_or_none()
     current_pos = current_rel.position
-    if direction == "up":
+    move_direction = data.direction
+    if move_direction == "up":
         neighbor_query = ( select(ProjectTasks).where(ProjectTasks.project_id == project_id, ProjectTasks.position < current_pos).order_by(ProjectTasks.position.desc()).limit(1) )
     else:
         neighbor_query = ( select(ProjectTasks).where(ProjectTasks.project_id == project_id, ProjectTasks.position > current_pos).order_by(ProjectTasks.position.asc()).limit(1))
@@ -193,17 +205,6 @@ async def get_projects(sees: SessionDep, current_user: User = Depends(get_curren
     #await redis.set(cache_key, json.dumps(projects_data), ex=3600)
     return projects_data
 
-@router.delete("/task/{id}")
-async def delete_task_by_id(id: int, sess: SessionDep, current_user: User = Depends(get_current_user)):
-    query = select(Task).where(Task.user_id == current_user.id, Task.id == id)
-    task = sess.execute(query)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    sess.delete(task)
-    sess.commit()
-    return {"success": True, "message": f"Task {id} deleted successfully"}
-
-
 @router.patch("/editTask/{id}")
 async def update_task( id: int, task_data: dict, sess: SessionDep, current_user: User = Depends(get_current_user)):
     query = select(Task).where(Task.user_id == current_user.id, Task.id == id)
@@ -267,6 +268,61 @@ async def get_goal_with_today_progress( goal_id: int, sess: SessionDep, current_
         await sess.commit()
         await sess.refresh(goal)
     return goal
+
+class PriorityUpdate(BaseModel):
+    priority: TaskPriority
+
+@router.patch("/tasks/{task_id}/priority")
+async def patch_task_priority( data: PriorityUpdate, task_id: int, sess: SessionDep, current_user: User = Depends(get_current_user) ):
+    query = select(Task).where(Task.id == task_id, Task.user_id == current_user.id)
+    res = await sess.execute(query)
+    task = res.scalar()
+    if not task:
+        raise HTTPException( status_code=status.HTTP_404_NOT_FOUND, detail="Task not found" )
+    task.priority = data.priority
+    sess.add(task)
+    await sess.commit()
+    await sess.refresh(task)
+    return task
+
+class PinRequest(BaseModel):
+    toPin: bool
+
+@router.patch("/tasks/{task_id}/pin")
+async def toggle_pin_task(task_id: int, request: PinRequest, current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis) ):
+    redis_key = f"user_pins:{current_user.id}"
+    if request.toPin:
+        await redis.sadd(redis_key, task_id)
+        message = "Task pinned"
+    else:
+        await redis.srem(redis_key, task_id)
+        message = "Task unpinned"
+    return {"success": True, "message": message, "is_pinned": request.toPin}
+
+@router.get("/tasks/pinned")
+async def get_pinned_tasks( current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis) ):
+    redis_key = f"user_pins:{current_user.id}"
+    pinned_ids = await redis.smembers(redis_key)
+    pinned_ids = [int(id) for id in pinned_ids]
+    return {"pinned_ids": pinned_ids}
+
+class TaskScheduleUpdate(BaseModel):
+    date_at: Optional[date] = None
+    time_at: Optional[time] = None
+
+@router.patch("/tasks/{task_id}/schedule")
+async def patch_task_schedule( task_id: int, data: TaskScheduleUpdate, sess: SessionDep, current_user: User = Depends(get_current_user) ):
+    query = select(Task).where(Task.id == task_id, Task.user_id == current_user.id)
+    result = await sess.execute(query)
+    task = result.scalar_one_or_none()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    task.date_at = data.date_at
+    task.time_at = data.time_at
+    sess.add(task)
+    await sess.commit()
+    await sess.refresh(task)
+    return { "success": True, "date_at": task.date_at, "time_at": task.time_at }
 
 @router.post("/goal")
 async def create_goal(data: GoalData, sess: SessionDep, current_user: User = Depends(get_current_user)):
