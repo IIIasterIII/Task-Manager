@@ -71,7 +71,7 @@ export default function TaskCreation() {
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="w-full max-w-xl bg-card-bg/90 backdrop-blur-2xl border border-white/10 rounded-[24px] relative overflow-hidden shadow-2xl z-10 pointer-events-auto flex flex-col"
+        className="w-full max-w-xl bg-card-bg/90 backdrop-blur-2xl border border-white/10 rounded-[24] relative overflow-hidden shadow-2xl z-10 pointer-events-auto flex flex-col"
       >
         {/* Header Area */}
         <div className="p-6 pb-2">
@@ -82,7 +82,7 @@ export default function TaskCreation() {
              <textarea
                 placeholder="What needs to be done?"
                 autoFocus
-                className="flex-1 bg-transparent border-none resize-none font-bold text-xl text-site-text outline-none placeholder:text-zinc-600 min-h-[40px]"
+                className="flex-1 bg-transparent border-none resize-none font-bold text-xl text-site-text outline-none placeholder:text-zinc-600 min-h-[40]"
                 value={task.title}
                 onChange={(e) => setTask({ ...task, title: e.target.value })}
               />
@@ -94,16 +94,14 @@ export default function TaskCreation() {
              </div>
              <textarea
                 placeholder="Add details or notes..."
-                className="flex-1 bg-transparent border-none resize-none font-medium text-[15px] text-second-text outline-none placeholder:text-zinc-700 min-h-[60px]"
+                className="flex-1 bg-transparent border-none resize-none font-medium text-[15px] text-second-text outline-none placeholder:text-zinc-700 min-h-[60]"
                 value={task.description}
                 onChange={(e) => setTask({ ...task, description: e.target.value })}
               />
           </div>
         </div>
 
-        {/* Action Bar / Metadata */}
         <div className="px-6 py-4 flex flex-wrap items-center gap-3 border-t border-white/5 bg-white/5">
-          {/* Priority Select */}
           <div className="relative group">
             <select 
                className="absolute inset-0 opacity-0 cursor-pointer z-10"
@@ -119,7 +117,6 @@ export default function TaskCreation() {
             </div>
           </div>
 
-          {/* Date Pick */}
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/5 bg-white/5 text-second-text hover:text-site-text transition-all cursor-pointer relative">
             <Calendar size={14} />
             <input 

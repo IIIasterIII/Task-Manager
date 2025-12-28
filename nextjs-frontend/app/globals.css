@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+
 @theme {
   --color-accent: var(--accent);
   --color-site-bg: var(--site-bg);
@@ -11,6 +12,8 @@
   --variant-purple: selector(.purple);
   --variant-cyber: selector(.cyber);
   --variant-midnight: selector(.midnight);
+  --variant-emerald: selector(.emerald); 
+  --variant-obsidian: selector(.obsidian);
 }
 
 @layer base {
@@ -44,6 +47,22 @@
     --second-text: #64748b; 
     --accent: #3888f8; 
     --card-bg: #0f172a; 
+  }
+
+  .emerald { 
+    --site-bg: #020a02; 
+    --site-text: #ecfdf5; 
+    --second-text: #648a71;
+    --accent: #10b981;
+    --card-bg: #061a0f; 
+  }
+
+  .obsidian { 
+    --site-bg: #0f0f11;
+    --site-text: #fafafa;
+    --second-text: #71717a;
+    --accent: #f59e0b;
+    --card-bg: #18181b;
   }
 
   ::-webkit-scrollbar {

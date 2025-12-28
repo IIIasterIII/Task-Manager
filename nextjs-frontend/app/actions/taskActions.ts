@@ -1,11 +1,8 @@
 "use server"
-
-import { revalidatePath } from 'next/cache';
-import { Task } from "../types/task"
-import { cookies } from "next/headers"
-import { cache } from "react"
-import { goalDataToSend } from '../app/goals/page';
 import { Priority, TaskCreate } from "@/app/types/task"
+import { goalDataToSend } from '../app/goals/page';
+import { revalidatePath } from 'next/cache';
+import { cookies } from "next/headers"
 
 const BASE_URL = "http://localhost:8000"
 
@@ -123,7 +120,7 @@ export const createGoal = async (data: goalDataToSend) => {
       });
       if (!res.ok) return { error: "Fild", status: res.status}
       const ress = await res.json();
-      return { ress, success: true}
+      return { success: true, data: ress}
     } catch (error) {
       console.error("Error:", error);
     }

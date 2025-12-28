@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
 from datetime import datetime
+from datetime import date
 from typing import List, Optional
 from ..redis.redis import get_redis
 from fastapi.encoders import jsonable_encoder
@@ -356,6 +357,8 @@ async def create_goal(data: GoalData, sess: SessionDep, current_user: User = Dep
         )
         sess.add(db_goal)
         await sess.flush() 
+
+        today_str = datetime.now().strftime("%d/%m/%Y")
         for task_item in data.tasks:
             new_task = GoalTask(
                 goal_id=db_goal.id,
@@ -369,12 +372,15 @@ async def create_goal(data: GoalData, sess: SessionDep, current_user: User = Dep
             new_entry = ChartTask(
                 id_goal_task=new_task.id,
                 value=0,
-                date=data.today
+                date=today_str
             )
             sess.add(new_entry)
+
         await sess.commit()
-        await sess.refresh(db_goal)
-        return {"status": "success", "goal_id": db_goal.id}
+        final_query = ( select(Goal).where(Goal.id == db_goal.id).options( selectinload(Goal.tasks).selectinload(GoalTask.chart_entries) ))
+        result = await sess.execute(final_query)
+        full_goal = result.scalars().unique().one()
+        return full_goal
 
     except SQLAlchemyError as e:
         await sess.rollback()

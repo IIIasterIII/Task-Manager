@@ -1,4 +1,3 @@
-import { setServers } from "dns"
 import { FC, ReactNode } from "react"
 
 interface ActionButtonProps {
@@ -8,6 +7,7 @@ interface ActionButtonProps {
     selected: number
     setSelected: (x: number) => void
 }
+
 const ActionButton : FC<ActionButtonProps> = ({id, title, icon, selected, setSelected}) => {
   return (
     <div className={`w-full h-10 flex flex-row items-center gap-5 border rounded-2xl hover:bg-indigo-300 duration-500 cursor-pointer ${selected == id && "bg-indigo-950 text-indigo-300"}`} onClick={() => setSelected(id)}>

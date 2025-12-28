@@ -56,5 +56,4 @@ export const userSlice = createSlice({
 });
 
 export const { setUserData, logout, setTab, toggleCreateProject, toggleModal } = userSlice.actions;
-
 export default userSlice.reducer;

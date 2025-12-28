@@ -9,8 +9,7 @@ const ToasterComponent = () => (
     position="bottom-right" 
     expand={true}
     closeButton 
-    toastOptions={{
-      style: { background: '#18181b', border: '1px solid #27272a', color: '#f4f4f5' },
+    toastOptions={{ style: { background: '#18181b', border: '1px solid #27272a', color: '#f4f4f5' },
       classNames: { closeButton: 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 border-zinc-700 transition-colors' }
     }}
   />

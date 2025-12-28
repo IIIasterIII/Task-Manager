@@ -1,27 +1,24 @@
 "use client"
-
+import BackdropLoading from "@/app/components/ui/backdropLoading";
+import { setUserData } from "@/app/features/ui/userSlice"
+import ProjectCreation from "./ui/projectCreation";
+import { useAppSelector } from '@/app/lib/hook';
+import { useAppDispatch } from "@/app/lib/hook"
+import { AnimatePresence } from "motion/react";
+import TaskCreation from "./ui/taskCreation";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAppSelector } from '@/app/lib/hook';
 import Sidebar from "../components/sidebar";
-import BackdropLoading from "@/app/components/ui/backdropLoading";
-import TaskCreation from "./ui/taskCreation";
-import { AnimatePresence } from "motion/react";
-import { setUserData } from "@/app/features/ui/userSlice"
-import { useAppDispatch } from "@/app/lib/hook"
-import ProjectCreation from "./ui/projectCreation";
 
 export default function AppContent({ children }: { children: React.ReactNode }) {
     const isModalOpen = useAppSelector((state) => state.ui.isModalOpen)
     const isCreateProjectOpen = useAppSelector((state) => state.ui.isCreateProjectOpen)
-    const isUserData = useAppSelector((state) => state.ui.profile)
     const [loading, setLoading] = useState<boolean>(true)
     const dispatch = useAppDispatch()
     const router = useRouter()
 
     useEffect(() => {
         let isMounted = true
-
         const checkAuth = async () => {
             try {
                 let res = await fetch("http://localhost:8000/me", { method: "POST", credentials: "include" })
@@ -50,9 +47,7 @@ export default function AppContent({ children }: { children: React.ReactNode }) 
             }
         };
         checkAuth();
-        return () => { 
-            isMounted = false; 
-        } 
+        return () => { isMounted = false } 
     }, [router]);
 
     return (
@@ -63,8 +58,7 @@ export default function AppContent({ children }: { children: React.ReactNode }) 
                 {isModalOpen && <TaskCreation key={1}/>}
                 {isCreateProjectOpen && <ProjectCreation/>}
             </AnimatePresence>
-            <main className="w-full h-screen relative overflow-hidden">
-                {children}</main>
+            <main className="w-full h-screen relative overflow-hidden">{children}</main>
         </div>
     );
 }
