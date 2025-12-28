@@ -71,6 +71,7 @@ const formatChartData = (tasks: Task[]) => {
 
       if(!tasks) return
       tasks.forEach(task => {
+          if(!task) return
           const chartEntry = task.chart_entries.find(e => e.date === dayStr);
           const value = chartEntry ? (chartEntry.value / task.target) * 100 : 0;
           entry[task.title] = Math.min(value, 100).toFixed();

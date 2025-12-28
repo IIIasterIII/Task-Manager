@@ -1,7 +1,6 @@
 "use client"
-
-import StoreProvider from "../lib/storeProvider";
 import AppContent from "./components/appContent";
+import StoreProvider from "../lib/storeProvider";
 import { Toaster } from 'sonner';
 
 const ToasterComponent = () => (

@@ -312,10 +312,9 @@ const Page = () => {
     }, [router])
 
     return (
-        <div className='w-full h-full p-5 relative bg-black min-h-screen text-white gap-5'>
+        <div className='w-full h-full p-5 relative bg-black min-h-screen text-white gap-5 overflow-y-scroll pb-25'>
 
             <button onClick={() => setOpen(prev => !prev)} className="flex ml-auto px-5 py-2 rounded-md bg-indigo-500 hover:bg-indigo-400 font-semibold transition shadow-lg cursor-pointer"> Create a goal </button>
-
             {goalListData && goalListData.map((el, i) => <GoalCard key={i} goal={el} />)}
 
             {openPanel && (

@@ -6,7 +6,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const resolvedParams = await params;
   const projectId = Number(resolvedParams.id);
   const [res, resPinnedIds] = await Promise.all([ getTasks(projectId), getPinnedTaskIds() ]);
-  console.log("Response from Redis:", resPinnedIds);
   const allTasks: TaskDTO[] = res.success && res.data ? res.data : [];
   const pinnedIds: number[] = resPinnedIds?.data?.pinned_ids || [];
   const initialPinnedTasks = allTasks.filter(task => pinnedIds.includes(task.id));
@@ -14,7 +13,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="h-screen relative w-full p-5">
-      <h1 className="text-2xl font-bold mb-4 w-full">Project Tasks</h1>
       <TaskListClient 
         initialTasks={initialTasks} 
         initialPinnedTasks={initialPinnedTasks} 

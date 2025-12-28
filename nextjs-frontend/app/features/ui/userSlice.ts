@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { number } from 'motion';
 
 interface UserData {
   id: number;

@@ -1,121 +1,171 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAppSelector, useAppDispatch } from "@/app/lib/hook";
 import { toggleModal } from "@/app/features/ui/userSlice";
-import { Priority, Task, TaskDTO } from "@/app/types/task"
-import { startTransition, useEffect, useState } from "react";
+import { Priority, Task, TaskDTO } from "@/app/types/task";
+import { startTransition, useEffect, useState, useRef } from "react";
 import { createTask } from "@/app/actions/taskActions";
 import { clearTask, confirmTask, setTaskOptimistic } from "@/app/features/ui/taskSlice";
-
-const Ellipsis = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    className="size-6"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
-    />
-  </svg>
-);
+import { 
+  Calendar, 
+  Clock, 
+  Flag, 
+  X, 
+  Type, 
+  AlignLeft, 
+  ChevronDown,
+  Sparkles
+} from "lucide-react";
 
 export default function TaskCreation() {
   const dispatch = useAppDispatch();
-  const isPanelId = useAppSelector((state) => state.ui.panel_id)
-  const taskSliceData = useAppSelector((state) => state.task.task)
-  const [open, setOpen] = useState(false)
+  const isPanelId = useAppSelector((state) => state.ui.panel_id);
+  const [openSettings, setOpenSettings] = useState(false);
   const [task, setTask] = useState<Task>({
     title: "",
     description: "",
     priority: Priority.LOW,
     parent_id: isPanelId || null
-  })
+  });
 
   const handleCreateTask = async () => {
-    const tempId = Math.floor(Math.random() * -1000000)
+    if (!task.title.trim()) return;
+    
+    const tempId = Math.floor(Math.random() * -1000000);
     const optimisticTask: TaskDTO = {
       ...task,
       id: tempId,   
       isOptimistic: true 
     };
 
-    dispatch(setTaskOptimistic(optimisticTask))
+    dispatch(setTaskOptimistic(optimisticTask));
+    dispatch(toggleModal(null)); // Закрываем модалку сразу для скорости
 
     startTransition(async () => {
-      const res = await createTask(task)
-      if(res.success)
-        dispatch(confirmTask(res.data));
-      else
-        dispatch(clearTask())
-      console.log(res)
-    })
-  }
+      const res = await createTask(task);
+      if(res.success) dispatch(confirmTask(res.data));
+      else dispatch(clearTask());
+    });
+  };
 
-  useEffect(() => {
-    console.log(taskSliceData)
-  }, [taskSliceData])
+  const priorityConfig = {
+    LOW: { color: "text-blue-400", bg: "bg-blue-400/10" },
+    MEDIUM: { color: "text-orange-400", bg: "bg-orange-400/10" },
+    HIGH: { color: "text-red-500", bg: "bg-red-500/10" },
+    URGENT: { color: "text-violet-500", bg: "bg-violet-500/10" },
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 50, scale: 1.2 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -50, scale: 0.8 }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed inset-0 w-screen z-50 pointer-events-none flex items-center justify-center"
-    >
-      <div className="flex min-h-full items-start translate-y-50 pointer-events-auto text-center">
-        <div className="w-150 max-h-300 min-h-50 bg-indigo-50 text-black rounded-xl relative">
-          <div className="p-5 gap-1">
-            <textarea
-              placeholder="Comfirm catering by Fri at noon"
-              className="resize-none font-medium outline-0 w-full"
-              value={task?.title || ""}
-              onChange={(e) => setTask(prev => prev ? { ...prev, title: e.target.value } : prev)}
-              id=""
-            ></textarea>
-            <textarea
-              placeholder="description"
-              className="resize-none font-extralight outline-0 max-h-10 w-full text-start"
-              value={task?.description || ""}
-              onChange={(e) => setTask(prev => prev ? { ...prev, description: e.target.value } : prev)}
-              id=""
-            ></textarea>
-            <div className="cursor-pointer relative" onClick={() => setOpen(!open)}>
-              <Ellipsis/>
-            </div>
-            {open && <div className="w-75 h-25 bg-indigo-50 rounded-xl absolute border border-indigo-300 z-50">
-                <select name="" id="" onChange={(e) => setTask(prev => prev ? { ...prev, priority: e.target.value as Priority} : prev)}>
-                  <option value="LOW">LOW</option>
-                  <option value="MEDIUM">MEDIUM</option>
-                  <option value="HIGH">HIGH</option>
-                  <option value="URGENT">URGENT</option>
-                </select>
-                <input type="date" name="" id="" onChange={(e) => setTask(prev => prev ? { ...prev, date_at: e.target.value} : prev)}/>
-                <input type="time" name="" id="" onChange={(e) => setTask(prev => prev ? { ...prev, time_at: e.target.value} : prev)}/>
-                </div>}
+    <div className="fixed inset-0 w-screen h-screen z-50 flex items-center justify-center p-4">
+      {/* Overlay */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={() => dispatch(toggleModal(null))}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto"
+      />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        className="w-full max-w-xl bg-card-bg/90 backdrop-blur-2xl border border-white/10 rounded-[24px] relative overflow-hidden shadow-2xl z-10 pointer-events-auto flex flex-col"
+      >
+        {/* Header Area */}
+        <div className="p-6 pb-2">
+          <div className="flex items-start gap-4 mb-4">
+             <div className="mt-1 p-2 rounded-lg bg-accent/10 text-accent">
+                <Type size={20} />
+             </div>
+             <textarea
+                placeholder="What needs to be done?"
+                autoFocus
+                className="flex-1 bg-transparent border-none resize-none font-bold text-xl text-site-text outline-none placeholder:text-zinc-600 min-h-[40px]"
+                value={task.title}
+                onChange={(e) => setTask({ ...task, title: e.target.value })}
+              />
           </div>
-          <hr />
-          <div className="flex flex-row items-center justify-between p-5">
-            <div>Parent_id: {isPanelId}</div>
-            <div className="gap-5 flex flex-row items-center">
+
+          <div className="flex items-start gap-4">
+             <div className="mt-1 p-2 text-second-text">
+                <AlignLeft size={20} />
+             </div>
+             <textarea
+                placeholder="Add details or notes..."
+                className="flex-1 bg-transparent border-none resize-none font-medium text-[15px] text-second-text outline-none placeholder:text-zinc-700 min-h-[60px]"
+                value={task.description}
+                onChange={(e) => setTask({ ...task, description: e.target.value })}
+              />
+          </div>
+        </div>
+
+        {/* Action Bar / Metadata */}
+        <div className="px-6 py-4 flex flex-wrap items-center gap-3 border-t border-white/5 bg-white/5">
+          {/* Priority Select */}
+          <div className="relative group">
+            <select 
+               className="absolute inset-0 opacity-0 cursor-pointer z-10"
+               value={task.priority}
+               onChange={(e) => setTask({ ...task, priority: e.target.value as Priority })}
+            >
+              {Object.values(Priority).map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/5 transition-all ${priorityConfig[task.priority].bg} ${priorityConfig[task.priority].color}`}>
+              <Flag size={14} fill="currentColor" fillOpacity={0.2} />
+              <span className="text-[11px] font-black uppercase tracking-wider">{task.priority}</span>
+              <ChevronDown size={12} className="opacity-50" />
+            </div>
+          </div>
+
+          {/* Date Pick */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/5 bg-white/5 text-second-text hover:text-site-text transition-all cursor-pointer relative">
+            <Calendar size={14} />
+            <input 
+              type="date" 
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              onChange={(e) => setTask({ ...task, date_at: e.target.value })}
+            />
+            <span className="text-[11px] font-bold uppercase tracking-wider">{task.date_at || "Set Date"}</span>
+          </div>
+
+          {/* Time Pick */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/5 bg-white/5 text-second-text hover:text-site-text transition-all cursor-pointer relative">
+            <Clock size={14} />
+            <input 
+              type="time" 
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              onChange={(e) => setTask({ ...task, time_at: e.target.value })}
+            />
+            <span className="text-[11px] font-bold uppercase tracking-wider">{task.time_at || "Set Time"}</span>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 flex items-center justify-between border-t border-white/5">
+           <div className="flex items-center gap-2 text-[11px] font-bold text-zinc-600 uppercase tracking-widest">
+              <Sparkles size={12} className="text-accent" />
+              Parent ID: {isPanelId || "Root"}
+           </div>
+
+           <div className="flex items-center gap-3">
               <button
-                className="cursor-pointer bg-gray-300"
+                className="px-4 py-2 rounded-xl text-sm font-bold text-second-text hover:text-site-text hover:bg-white/5 transition-all"
                 onClick={() => dispatch(toggleModal(null))}
               >
                 Cancel
               </button>
-              <button className="bg-red-700 text-white rounded-xl py-2 duration-700 hover:bg-red-600 px-3 cursor-pointer" onClick={handleCreateTask}>
-                Add task
+              <button 
+                onClick={handleCreateTask}
+                disabled={!task.title.trim()}
+                className="px-6 py-2 rounded-xl text-sm font-black bg-accent text-white hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 shadow-[0_0_15px_var(--accent)] shadow-accent/20"
+              >
+                Add Task
               </button>
-            </div>
-          </div>
+           </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }

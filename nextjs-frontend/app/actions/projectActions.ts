@@ -6,7 +6,7 @@ import { cookies } from "next/headers"
 export interface ProjectData {
     name: string
     color: string
-    parent_id: string | null
+    parent_id: number | null
     is_favorite: boolean
   }
 
@@ -22,9 +22,11 @@ export async function createProject(data: ProjectData) {
       })
   
       if (!res.ok) return { error: "Server error" }
+
+      const responseData = await res.json()
       
       revalidatePath("/tasks") 
-      return { success: true }
+      return { success: true, data: responseData }
     } catch (e) {
       return { error: "Netword Error" }
     }

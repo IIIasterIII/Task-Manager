@@ -3,10 +3,7 @@
 import { FC, useState, useRef, useEffect, startTransition, SetStateAction, Dispatch } from 'react'
 import { Calendar, Clock, MoreVertical, ArrowUp, ArrowDown, Pencil, Copy, Trash2, Pin, ChevronRight, CalendarDays, Sun, Ban, Sparkles, ShieldAlert, ShieldCheck, Shield, Zap, Check, X } from 'lucide-react'
 import { createTask, moveTask, updateTaskDetails, updateTaskPriority, updateTaskSchedule } from '@/app/actions/taskActions'
-// Добавь экшен updateTaskDetails в свой файл actions
-// import { updateTaskDetails } from '@/app/actions/taskActions' 
 import { Priority, TaskCreate, TaskDTO } from '@/app/types/task'
-import { renderToPipeableStream } from 'react-dom/server'
 
 interface TaskProps {
     data: TaskDTO,
@@ -32,11 +29,9 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
 
     const toggleMenu = (e: React.MouseEvent) => {
     if (!open) {
-        // Проверяем, сколько места осталось до низа экрана
         const rect = e.currentTarget.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
         
-        // Если места меньше 400px (высота меню примерно такая), открываем вверх
         if (spaceBelow < 400) {
             setDropUp(true);
         } else {
@@ -195,7 +190,6 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
     const handleQuickDate = (type: 'today' | 'tomorrow' | 'weekend' | 'none') => {
         let targetDate: string | undefined = undefined
         const now = new Date();
-    
         switch (type) {
             case 'today':
                 targetDate = now.toISOString().split('T')[0];
@@ -216,13 +210,12 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
                 targetDate = undefined;
                 break;
         }
-    
         updateTaskDate(targetDate, targetDate ? "23:59" : undefined);
     };
 
     return (
-        <div className={`group w-full min-h-[60] bg-zinc-900/40 border border-zinc-800/50 rounded-2xl
-         flex flex-row items-center gap-4 px-4 py-3 transition-all duration-500 relative hover:bg-zinc-800/40 ${priorityColorsHover[data.priority]} ${completed && 'opacity-50'}`}>
+        <div className={`group w-full h-20 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl
+         flex flex-row items-center gap-4 px-4 py-3 transition-all duration-500 relative hover:bg-zinc-800/40 ${open ? 'z-100' : 'z-0'} ${priorityColorsHover[data.priority]} ${completed && 'opacity-50'}`}>
             
             <div 
                 className={`shrink-0 w-5 h-5 rounded-full border-2 flex justify-center items-center transition-all duration-300 cursor-pointer
@@ -286,16 +279,20 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
             
             <button 
                 title="Setting" 
-                className={`p-2 rounded-xl transition-all duration-300 cursor-pointer ${ priorityColors[data.priority] } bg-zinc-900 hover:bg-zinc-800`} 
-                onClick={toggleMenu} // Используем новую функцию
+                className={`p-2 rounded-xl transition-all duration-300 cursor-pointer 
+                    ${ priorityColors[data.priority] } 
+                    bg-zinc-900 hover:bg-zinc-800 relative z-10`}
+                onClick={(e) => {if(!completed) toggleMenu(e)}}
             >
                 <MoreVertical size={18}/>
             </button>
 
             {open && (
                 <div 
-                    ref={menuRef}
-                    className={`absolute right-0 w-64 bg-zinc-900 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl z-100 animate-in fade-in zoom-in-95 duration-200 ${dropUp ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right' }`}
+                ref={menuRef}
+                className={`absolute right-0 w-64 bg-zinc-900 backdrop-blur-xl border border-white/10 
+                rounded-2xl p-2 shadow-2xl z-110 animate-in fade-in zoom-in-95 duration-200 
+                ${dropUp ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right' }`}
                 >
                     <div className="px-3 py-1.5">
                         <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]">Navigation</p>

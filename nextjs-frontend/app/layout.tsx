@@ -4,8 +4,8 @@ import { ThemeProvider } from "next-themes"
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="bg-background-950">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem themes={['light', 'dark', 'purple', 'cyber', 'midnight']}>
         {children}
         </ThemeProvider>
       </body>

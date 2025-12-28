@@ -365,6 +365,13 @@ async def create_goal(data: GoalData, sess: SessionDep, current_user: User = Dep
                 type=task_item.type
             )
             sess.add(new_task)
+            await sess.flush()
+            new_entry = ChartTask(
+                id_goal_task=new_task.id,
+                value=0,
+                date=data.today
+            )
+            sess.add(new_entry)
         await sess.commit()
         await sess.refresh(db_goal)
         return {"status": "success", "goal_id": db_goal.id}

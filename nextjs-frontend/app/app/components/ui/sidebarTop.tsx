@@ -1,10 +1,11 @@
 "use client"
 
 import { useAppDispatch, useAppSelector } from "@/app/lib/hook"
-import { FC, useEffect, useState } from "react"
+import { FC, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { logout } from "@/app/features/ui/userSlice"
 import { deleteCookie } from "@/app/actions/apiClient"
+import { Logs, BookOpen } from "lucide-react"
 
 interface HoverPanelProps {
   close: boolean
@@ -16,6 +17,7 @@ const HoverPanel : FC<HoverPanelProps> = ({close, setClose}) => {
   const isUserData = useAppSelector((state) => state.ui.profile)
   const router = useRouter()
   const[open, setOpen] = useState(false)
+  const menuRef = useRef(null)
 
   const handleLogout = async () => {
     deleteCookie()
@@ -27,27 +29,9 @@ const HoverPanel : FC<HoverPanelProps> = ({close, setClose}) => {
     console.log(isUserData)
   }, [isUserData])
 
-  const Notification = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-    </svg>
-  )
-
-  const NotificationNone = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-    </svg>
-  )
-
   const OpenOrCloseSidebar = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
       <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 9.75 16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
-    </svg>
-  )
-
-  const More = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
     </svg>
   )
 
@@ -74,25 +58,58 @@ const HoverPanel : FC<HoverPanelProps> = ({close, setClose}) => {
   );
 
   return (
-    <div className='flex flex-row items-center gap-2 min-h-10 relative'>
-     {isUserData ? (
-        <>
-        <div onClick={() => setOpen(!open)} className="flex flex-row gap-2 items-center active:scale-95 select-none cursor-pointer duration-300 hover:bg-indigo-500 p-1 rounded-xl">
-          <img src={isUserData.user_pic && isUserData.user_pic} className="w-10 h-10 border rounded-xl"/>
-          <p className="">{isUserData.username}</p>
-          <More/>
+  <div className='flex flex-row items-center gap-2 relative px-2'>
+  {isUserData && (
+    <>
+      <div 
+        onClick={() => setOpen(!open)} 
+        className="flex flex-1 flex-row gap-3 items-center active:scale-95 select-none cursor-pointer duration-300 hover:bg-white/5 p-1.5 rounded-2xl group transition-all border border-transparent hover:border-white/10"
+      >
+        <div className="relative">
+          <img 
+            src={isUserData.user_pic || "/default-avatar.png"} 
+            className="w-10 h-10 border border-white/10 rounded-xl object-cover shadow-sm group-hover:shadow-accent/20"
+          />
+          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-site-bg rounded-full" />
         </div>
-
-        <div className="w-10 h-10 border rounded-xl ml-auto flex items-center justify-center" onClick={() => router.push("/app/notifications")}><Notification/></div>
-        <div className="w-10 h-10 border rounded-2xl flex items-center justify-center" onClick={() => setClose(!close)}><OpenOrCloseSidebar/></div>
-      </>
-      ) : <Skeleton/>}
-      {open && <div className="absolute w-80 z-10 p-5 rounded-xl bg-indigo-50 top-0 translate-y-15 text-gray-600">
-          <button onClick={() => router.push("/app/profile")} className="flex flex-row items-center gap-2 duration-300 hover:bg-gray-300 cursor-pointer px-2 py-2 rounded-xl w-full"><Setting/>Setting</button>
-          <hr className="my-1"/>
-          <button className="flex flex-row items-center gap-2 duration-300 hover:bg-gray-300 cursor-pointer px-2 py-2 rounded-xl w-full" onClick={handleLogout}><Logout/> Log out</button>
-        </div>}
+        
+        <div className="flex flex-col flex-1 min-w-0">
+          <p className="text-sm font-bold truncate text-site-text">{isUserData.username}</p>
+        </div>
       </div>
+
+      <div className="flex items-center gap-1.5 ml-auto">
+        <button 
+          title="Activity Logs"
+          className="w-10 h-10 cursor-pointer border border-white/5 rounded-xl flex items-center justify-center text-second-text hover:text-accent hover:bg-white/5 transition-all active:scale-90" 
+          onClick={() => router.push("/app/logs")}
+        >
+          <Logs/>
+        </button>
+        
+        <button 
+          title={close ? "Open Sidebar" : "Close Sidebar"}
+          className="w-10 h-10 cursor-pointer border border-white/5 rounded-xl flex items-center justify-center 
+          text-second-text hover:text-site-text hover:bg-white/5 transition-all active:scale-90" 
+          onClick={() => setClose(!close)}
+        >
+          <OpenOrCloseSidebar/>
+        </button>
+      </div>
+          {open && (
+            <div 
+              ref={menuRef} 
+              className="absolute left-0 right-0 w-full z-100 p-2 rounded-2xl bg-card-bg/80 backdrop-blur-xl border border-white/10 shadow-2xl top-14 duration-200">
+              <button 
+                className="flex flex-row items-center gap-3 duration-200 hover:bg-red-500/10 text-red-500 cursor-pointer px-3 py-2.5 rounded-xl w-full font-medium" 
+                onClick={handleLogout}><Logout/>
+                Sign Out
+              </button>
+            </div>)
+          }
+      </>
+    )}
+  </div>
   )
 }
 
