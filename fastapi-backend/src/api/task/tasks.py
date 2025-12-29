@@ -1,65 +1,23 @@
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel, ConfigDict
-from .auth import get_current_user
-from ..db.session import SessionDep
-from typing import Optional
-from src.db.models.users import User, Task, Project, ProjectTasks, Goal, GoalTask, ChartTask
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.exc import SQLAlchemyError
-from fastapi import HTTPException, status
-from datetime import datetime
-from datetime import date
-from typing import List, Optional
-from ..redis.redis import get_redis
+from src.db.models.models import User, Task, Project, ProjectTasks, Goal, GoalTask, ChartTask
 from fastapi.encoders import jsonable_encoder
-from redis.asyncio import Redis
-from datetime import date, time
-from ..actions.actions import add_active_log
+from ...redis.actions import add_active_log
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException, status
+from ..auth.auth import get_current_user
 from sqlalchemy.orm import selectinload
-from sqlalchemy import select
-import json
-from typing import Literal
+from fastapi import APIRouter, Depends
+from ...redis.redis import get_redis
+from ...db.session import SessionDep
 from sqlalchemy import select, func
-import enum
+from redis.asyncio import Redis
+from datetime import datetime
+from sqlalchemy import select
+from .schemas import *
 import traceback
+import json
 
 router = APIRouter()
-
-class ProjectCreate(BaseModel):
-    name: str
-    color: str
-    favorite: bool = False
-    parent_id: Optional[int] = None
-
-class TaskPriority(str, enum.Enum):
-    LOW = "LOW"
-    MEDIUM = "MEDIUM"
-    HIGH = "HIGH"
-    URGENT = "URGENT"
-
-class TaskData(BaseModel):
-    title: str
-    description: Optional[str] = None
-    priority: TaskPriority
-    parent_id: int
-    date_at: Optional[date] = None
-    time_at: Optional[time] = None
-
-class ProjectDTO(BaseModel):
-    id: int
-    name: str
-    color: str
-    favorite: bool
-    parent_id: Optional[int] = None
-    model_config = ConfigDict(from_attributes=True)
-
-class TaskDTO(BaseModel):
-    id: int
-    title: str
-    description: Optional[str] = None
-    priority: str
-    date_at: Optional[date] = None
-    time_at: Optional[time] = None
 
 @router.delete("/tasks/{id}/delete")
 async def delete_task_by_id(id: int, sess: SessionDep, current_user: User = Depends(get_current_user)):
@@ -71,6 +29,8 @@ async def delete_task_by_id(id: int, sess: SessionDep, current_user: User = Depe
     await sess.delete(task)
     await sess.commit()
     return {"success": True}
+
+
 
 @router.post("/task", status_code=201)
 async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
@@ -104,14 +64,15 @@ async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: U
                 "trace": traceback.format_exc()
             }
         )
-    
-class TaskPriorityRequest(BaseModel):
-    direction: Literal["up", "down"]
+
+
 
 @router.get("/history")
 async def get_history(current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
     logs = await redis.lrange(f"activity_log:{current_user.id}", 0, -1)
     return [json.loads(log) for log in logs]
+
+
 
 @router.patch("/tasks/move/{project_id}/{task_id}")
 async def move_task(project_id: int, task_id: int, data: TaskPriorityRequest, sess: SessionDep, current_user: User = Depends(get_current_user)):
@@ -134,6 +95,8 @@ async def move_task(project_id: int, task_id: int, data: TaskPriorityRequest, se
     await sess.commit()
     return {"success": True}
 
+
+
 @router.get("/tasksss/{parent_id}", response_model=List[TaskDTO])
 async def get_tasks(parent_id: int, sess: SessionDep, current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
     #cache_key = f"user:{current_user.id}:parent:{parent_id}:tasks"
@@ -148,6 +111,8 @@ async def get_tasks(parent_id: int, sess: SessionDep, current_user: User = Depen
     #await redis.set(cache_key, json.dumps(tasks_data), ex=3600)
     return tasks
     
+
+
 @router.patch("/tasks/{id}")
 async def complete_task(id: int, sess: SessionDep, current_user: User = Depends(get_current_user)):
     query = select(Task).where(Task.id == id, Task.user_id == current_user.id)
@@ -164,6 +129,8 @@ async def complete_task(id: int, sess: SessionDep, current_user: User = Depends(
         await sess.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update task status")
     
+
+
 @router.post("/project", status_code=201, response_model=ProjectDTO)
 async def create_new_project(project_data: ProjectCreate, sess: SessionDep, current_user: User = Depends(get_current_user)):
     new_project = Project(
@@ -188,6 +155,8 @@ async def create_new_project(project_data: ProjectCreate, sess: SessionDep, curr
         print(f"Unexpected error: {e}")
         raise HTTPException( status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred on the server" )
     
+
+
 @router.get("/projects", response_model_by_alias=List[ProjectDTO])
 async def get_projects(sees: SessionDep, current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
     #cache_key = f"user:{current_user.id}:projects"
@@ -206,6 +175,8 @@ async def get_projects(sees: SessionDep, current_user: User = Depends(get_curren
     #await redis.set(cache_key, json.dumps(projects_data), ex=3600)
     return projects_data
 
+
+
 @router.patch("/editTask/{id}")
 async def update_task( id: int, task_data: dict, sess: SessionDep, current_user: User = Depends(get_current_user)):
     query = select(Task).where(Task.user_id == current_user.id, Task.id == id)
@@ -220,16 +191,7 @@ async def update_task( id: int, task_data: dict, sess: SessionDep, current_user:
     sess.refresh(db_task)
     return {"success": True, "data": db_task}
 
-class GoalTaskData(BaseModel):
-    title: str
-    color: str
-    target: int
-    type: str
 
-class GoalData(BaseModel):
-    title: str
-    description: str
-    tasks: List[GoalTaskData]
 
 @router.get("/goals")
 async def get_goals(sess: SessionDep, current_user: User = Depends(get_current_user)):
@@ -237,6 +199,8 @@ async def get_goals(sess: SessionDep, current_user: User = Depends(get_current_u
     result = await sess.execute(query)
     goals = result.scalars().unique().all()
     return goals
+
+
 
 @router.get("/goal/{goal_id}")
 async def get_goal_with_today_progress( goal_id: int, sess: SessionDep, current_user: User = Depends(get_current_user) ):
@@ -270,8 +234,7 @@ async def get_goal_with_today_progress( goal_id: int, sess: SessionDep, current_
         await sess.refresh(goal)
     return goal
 
-class PriorityUpdate(BaseModel):
-    priority: TaskPriority
+
 
 @router.patch("/tasks/{task_id}/priority")
 async def patch_task_priority( data: PriorityUpdate, task_id: int, sess: SessionDep, current_user: User = Depends(get_current_user) ):
@@ -286,8 +249,7 @@ async def patch_task_priority( data: PriorityUpdate, task_id: int, sess: Session
     await sess.refresh(task)
     return task
 
-class PinRequest(BaseModel):
-    toPin: bool
+
 
 @router.patch("/tasks/{task_id}/pin")
 async def toggle_pin_task(task_id: int, request: PinRequest, current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis) ):
@@ -300,6 +262,8 @@ async def toggle_pin_task(task_id: int, request: PinRequest, current_user: User 
         message = "Task unpinned"
     return {"success": True, "message": message, "is_pinned": request.toPin}
 
+
+
 @router.get("/tasks/pinned")
 async def get_pinned_tasks( current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis) ):
     redis_key = f"user_pins:{current_user.id}"
@@ -308,9 +272,7 @@ async def get_pinned_tasks( current_user: User = Depends(get_current_user), redi
     print(pinned_ids)
     return {"pinned_ids": pinned_ids}
 
-class TaskScheduleUpdate(BaseModel):
-    date_at: Optional[date] = None
-    time_at: Optional[time] = None
+
 
 @router.patch("/tasks/{task_id}/schedule")
 async def patch_task_schedule( task_id: int, data: TaskScheduleUpdate, sess: SessionDep, current_user: User = Depends(get_current_user) ):
@@ -326,9 +288,7 @@ async def patch_task_schedule( task_id: int, data: TaskScheduleUpdate, sess: Ses
     await sess.refresh(task)
     return { "success": True, "date_at": task.date_at, "time_at": task.time_at }
 
-class TaskDetailsUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
+
 
 @router.patch("/tasks/{task_id}/details")
 async def patch_task_details( task_id: int, data: TaskDetailsUpdate, sess: SessionDep, current_user: User = Depends(get_current_user) ):
@@ -345,6 +305,8 @@ async def patch_task_details( task_id: int, data: TaskDetailsUpdate, sess: Sessi
     await sess.commit()
     await sess.refresh(task)
     return {"success": True, "task": task}
+
+
 
 @router.post("/goal")
 async def create_goal(data: GoalData, sess: SessionDep, current_user: User = Depends(get_current_user)):

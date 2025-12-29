@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
-from .models.users import Base
+from .models.models import Base
 from typing import Annotated
 from fastapi import Depends
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { FC, startTransition, useEffect, useState } from "react"
+import { startTransition, useEffect, useState } from "react"
 import { MiniChart } from "../../components/ui/miniChart"
 import { getGoal } from "@/app/actions/taskActions"
 import { TaskInputSection } from "../../components/ui/taskInputSection"
@@ -61,7 +61,7 @@ const formatChartData = (tasks: Task[]) => {
     if (!tasks) return
     tasks.forEach((task) => {
       if (!task) return
-      const chartEntry = task.chart_entries.find((e) => e.date === dayStr)
+      const chartEntry = task.chart_entries?.find((e) => e.date === dayStr)
       const value = chartEntry ? (chartEntry.value / task.target) * 100 : 0
       entry[task.title] = Math.min(value, 100).toFixed()
     })

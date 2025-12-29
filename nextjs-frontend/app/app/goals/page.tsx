@@ -38,7 +38,7 @@ const Page = () => {
     }, [router])
 
     return (
-        <div className='w-full h-full p-5 relative bg-black min-h-screen text-white flex flex-col gap-5 overflow-y-auto pb-25'>
+        <div className='w-full h-full p-5 relative min-h-screen text-white flex flex-col gap-5 overflow-y-auto pb-25'>
             <div className='w-full flex justify-end'>
                 <Button title={"Create a goal"} func={() => setOpen(true)}/>
             </div>

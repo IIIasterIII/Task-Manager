@@ -1,7 +1,7 @@
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.auth import router as AuthRouter
-from src.api.tasks import router as TaskRouter
+from src.api.auth.auth import router as AuthRouter
+from src.api.task.tasks import router as TaskRouter
 from src.db.session import init_models
 from dotenv import load_dotenv
 from fastapi import FastAPI
