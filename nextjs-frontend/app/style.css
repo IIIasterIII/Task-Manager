@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* Назначаем Geist шрифтом по умолчанию для всей темы */
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+
+  --color-accent-orange: #ff623d;
+  --color-accent-blue: #0070f3;
+  --color-accent-purple: #a855f7;
+  --color-accent-gold: #ffd34d;
+  
+  --color-site-bg: #030303;
+  --color-site-text: #ffffff;
+  --color-second-text: #949494;
+  
+  --color-card-bg: #0d0d0f;
+  --color-card-border: rgba(255, 255, 255, 0.08);
+  --color-card-glow: rgba(255, 98, 61, 0.15);
+}
+
+@layer base {
+  body {
+    /* antialiased делает шрифт тонким и аккуратным на темном фоне, как на фото */
+    @apply bg-site-bg text-site-text font-sans antialiased tracking-tight;
+  }
+
+  /* Добавим небольшое межсимвольное расстояние для заголовков, чтобы было 1-в-1 */
+  h1, h2, h3 {
+    @apply tracking-tighter font-semibold;
+  }
+}
