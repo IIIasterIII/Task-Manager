@@ -42,7 +42,7 @@ const HoverPanel : FC<HoverPanelProps> = ({close, setClose}) => {
     <>
       <div 
         onClick={() => setOpen(!open)} 
-        className="flex flex-1 flex-row gap-3 items-center active:scale-95 select-none cursor-pointer duration-300 p-1.5 rounded-2xl group transition-all border border-transparent hover:border-white/10"
+        className="flex flex-1 flex-row gap-3 items-center active:scale-95 select-none cursor-pointer duration-300 p-1.5 rounded-2xl group transition-all"
       >
         <div className="relative">
           <img src={isUserData.user_pic || "/default-avatar.png"} className="w-10 h-10 border border-white/10 rounded-xl object-cover shadow-sm group-hover:shadow-accent"/>

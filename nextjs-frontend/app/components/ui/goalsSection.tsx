@@ -10,7 +10,7 @@ const GoalsSection = () => {
         {/* Мягкое свечение за заголовком */}
         <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-64 h-24 bg-blue-500/10 blur-[100px]" />
         
-        <h2 className="text-4xl md:text-7xl font-bold tracking-tighter mb-6 bg-gradient-to-b from-white to-[#404040] bg-clip-text text-transparent">
+        <h2 className="text-4xl md:text-7xl font-bold tracking-tighter mb-6 bg-linear-to-b from-white to-[#404040] bg-clip-text text-transparent">
           Turn big dreams <br /> into small steps
         </h2>
         <p className="text-gray-400 text-lg max-w-2xl mx-auto font-light leading-relaxed">
@@ -42,7 +42,7 @@ const GoalsSection = () => {
             </div>
           </div>
           {/* Световой блик при ховере */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-linear-to-tr from-blue-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
 
         {/* Маленькая карточка (Stats) */}
@@ -93,7 +93,7 @@ const GoalsSection = () => {
               ))}
            </div>
            {/* Декоративная линия фона */}
-           <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
+           <div className="absolute bottom-0 left-0 w-full h-[1] bg-linear-to-r from-transparent via-blue-500/20 to-transparent" />
         </div>
       </div>
     </section>

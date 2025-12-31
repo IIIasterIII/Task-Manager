@@ -1,104 +1,100 @@
 "use client"
 
-import Image from 'next/image';
-import React from 'react';
 import { motion } from "motion/react"
-import { Zap, Rocket, Shield } from 'lucide-react';
-
+import { Zap, Target, Shield } from 'lucide-react';
+import Block from "./block";
 const SecondSection = () => {
   return (
-    <section className="relative w-full min-h-auto flex flex-col items-center justify-center bg-[#030303] px-6 py-20 overflow-hidden">
-
-    <section className="mt-32 w-full max-w-6xl px-6 grid grid-cols-1 md:grid-cols-3 gap-8 pb-20">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="p-8 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-[#FE0C46]/30 transition-colors">
-        <div className="w-12 h-12 rounded-xl bg-[#FE0C46]/10 flex items-center justify-center mb-6 text-[#FE0C46]">
-          <Zap size={24} />
-        </div>
-        <h3 className="text-xl font-semibold text-white mb-3">Мгновенная работа</h3>
-        <p className="text-gray-400 leading-relaxed">
-          Никаких ожиданий. Интерфейс оптимизирован для максимальной скорости отклика и синхронизации данных.
-        </p>
-      </motion.div>
-
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.1 }}
-        className="p-8 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-[#FE0C46]/30 transition-colors">
-        <div className="w-12 h-12 rounded-xl bg-[#FE0C46]/10 flex items-center justify-center mb-6 text-[#FE0C46]">
-          <Shield size={24} />
-        </div>
-        <h3 className="text-xl font-semibold text-white mb-3">Безопасность</h3>
-        <p className="text-gray-400 leading-relaxed">
-          Ваши данные принадлежат только вам. Мы используем современные стандарты шифрования для защиты ваших задач.
-        </p>
-      </motion.div>
-
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.2 }}
-        className="p-8 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-[#FE0C46]/30 transition-colors">
-        <div className="w-12 h-12 rounded-xl bg-[#FE0C46]/10 flex items-center justify-center mb-6 text-[#FE0C46]">
-          <Rocket size={24} />
-        </div>
-        <h3 className="text-xl font-semibold text-white mb-3">Всё в одном</h3>
-        <p className="text-gray-400 leading-relaxed">
-          Канбан-доски, списки задач и аналитика продуктивности в одном едином рабочем пространстве.
-        </p>
-      </motion.div>
-    </section>
+    <section className="relative w-full min-h-screen flex flex-col items-center justify-center bg-[#030303] px-6 py-20 overflow-hidden">
       
-      {/* Фоновое свечение за видео */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-blue-600/20 blur-[120px] rounded-full" />
+      {/* Сетка фичей */}
+      <section className="mt-32 w-full max-w-6xl px-6 grid grid-cols-1 md:grid-cols-3 gap-8 pb-20 mb-32 relative z-10">
+        <Block 
+            Icon={Zap}
+            title="Instant Feedback"
+            description="Zero waiting time. The interface is so fast it might actually predict your next move (not really, but it's close)."
+            delay={0.1}
+        />
+        <Block 
+            Icon={Shield}
+            title="Honest Security"
+            description="We don't use military-grade encryption because we're not a bank. It's just you, your tasks, and my database. Keep it secret!"
+            delay={0.2}
+        />
+        <Block 
+            Icon={Target}
+            title="The 'Holy Trinity'"
+            description="We skipped the clutter. You get a task manager, a history of your wins, and goals to chase. Simple as that."
+            delay={0.3}
+        />
+      </section>
+      
+      {/* Визуальный блок (Плеер/Дашборд) */}
+      <div className="relative w-full max-w-[1000] aspect-video rounded-2xl bg-[#0A0A0A] shadow-2xl overflow-hidden group">
+        <div 
+          className="absolute inset-0 rounded-2xl pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle at center, #FFFFFF 14%, #FF1D1D 100%)',
+            mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            maskComposite: 'exclude',
+            WebkitMaskComposite: 'xor',
+          }}
+        />
 
-      {/* Контейнер для видео / интерфейса */}
-      <div className="relative w-full max-w-[1000px] aspect-video rounded-2xl border border-white/10 bg-[#0A0A0A] shadow-2xl overflow-hidden group">
-        {/* Имитация видео-плеера или дашборда */}
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-white/5 to-transparent">
-          {/* Иконка Play (центральный элемент) */}
-          <div className="w-20 h-20 rounded-full bg-white/10 border border-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform duration-500 cursor-pointer">
-            <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[18px] border-l-white border-b-[10px] border-b-transparent ml-1" />
+        <div 
+          className="absolute inset-0 opacity-10 pointer-events-none" 
+          style={{
+            background: 'radial-gradient(circle at center, #FFFFFF 14%, #FF1D1D 100%)',
+            filter: 'blur(40px)'
+          }}
+        />
+
+        <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-white/5 to-transparent">
+          <div className="w-20 h-20 rounded-full bg-white/10 border border-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform duration-500 cursor-pointer relative z-10">
+            <div className="w-0 h-0 border-t-[10] border-t-transparent border-l-[18] border-l-white border-b-[10] border-b-transparent ml-1" />
           </div>
           
-          {/* Декоративные элементы прогресс-бара */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-linear-to-t from-black/80 to-transparent z-10">
             <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-              <div className="w-1/3 h-full bg-blue-500 shadow-[0_0_10px_#3b82f6]" />
+              <div className="w-1/3 h-full bg-[#FF1D1D] shadow-[0_0_15px_#FF1D1D]" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Текстовый блок */}
-      <div className="mt-16 text-center h-screen w-ful relative">
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight z-10">
+      <div className="mt-32 text-center flex flex-col justify-center items-center w-full relative z-20 pb-20">
+        <motion.h2 
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
           Visual Progress Tracking
-        </h1>
+        </motion.h2>
         
-        <p className="text-gray-400 text-lg leading-relaxed z-10">
-          Set ambitious goals and track your journey. <br/> Our built-in analytics 
-          <span className="text-white z-10"> transform your daily effort </span> 
-          into beautiful, actionable progress charts.
-        </p>
+        <motion.p 
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+          className="text-gray-400 text-lg leading-relaxed max-w-2xl px-4">
+          Set ambitious goals and track your journey through time. <br/> 
+          Our history logs <span className="text-white font-medium">transform your raw daily effort</span> into a clear roadmap of where you've been and where you're going.
+        </motion.p>
 
-        {/* Кнопка действия */}
-        <button className="mt-10 px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-all active:scale-95 z-10">
-          Start Tracking
-        </button>
+        <motion.button 
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="mt-10 px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-neutral-200 transition-colors shadow-[0_20px_40px_rgba(255,255,255,0.1)]">
+          Start Tracking Now
+        </motion.button>
       </div>
 
-
-
-      {/* Декоративная сетка на фоне (опционально) */}
-      <div className="absolute inset-0 z-10 z-[-1] opacity-[0.03] pointer-events-none" 
-           style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: '40px 40px' }} 
+      {/* Фоновая сетка */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" 
+           style={{ 
+             backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, 
+             backgroundSize: '40px 40px' 
+           }} 
       />
     </section>
   );

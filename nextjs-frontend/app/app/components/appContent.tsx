@@ -18,41 +18,54 @@ export default function AppContent({ children }: { children: React.ReactNode }) 
     const router = useRouter()
 
     useEffect(() => {
-        let isMounted = true
+        let isMounted = true;
+        
         const checkAuth = async () => {
             try {
-                let res = await fetch("http://localhost:8000/me", { method: "POST", credentials: "include" })
+                let res = await fetch("http://localhost:8000/me", { 
+                    method: "POST", 
+                    credentials: "include" 
+                });
+    
                 if (res.status === 401) {
-                    console.log("Token expired, trying to refresh...")
-                    const refreshRes = await fetch("http://localhost:8000/refresh", { method: "POST", credentials: "include" })
+                    const refreshRes = await fetch("http://localhost:8000/refresh", { 
+                        method: "POST", 
+                        credentials: "include" 
+                    });
+                    
                     if (refreshRes.ok) {
-                        res = await fetch("http://localhost:8000/me", { method: "POST", credentials: "include" })
-                    } else {
-                        throw new Error("Refresh failed")
+                        await fetch("http://localhost:8000/me", { 
+                            method: "POST", 
+                            credentials: "include" 
+                        });
                     }
                 }
+    
                 if (res.ok && isMounted) {
                     const data = await res.json()
                     dispatch(setUserData(data))
-                } else {
+                    setLoading(false)
+                } else if (isMounted) {
                     router.push("/auth")
                 }
             } catch (err) {
                 if (isMounted) {
-                    console.error("Critical auth error:", err)
+                    console.error("Auth error:", err)
                     router.push("/auth")
                 }
-            } finally {
-                if (isMounted) setLoading(false)
             }
         };
+    
         checkAuth();
-        return () => { isMounted = false } 
-    }, [router]);
+        return () => { isMounted = false };
+    }, [dispatch, router]);
+    
+    if (loading) {
+        return <BackdropLoading open={true} />;
+    }
 
     return (
         <div className="w-full h-screen flex flex-row">
-            <BackdropLoading open={loading} />
             <Sidebar />
             <AnimatePresence mode="wait">
                 {isModalOpen && <TaskCreation key={1}/>}

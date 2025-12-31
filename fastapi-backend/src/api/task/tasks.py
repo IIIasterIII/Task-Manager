@@ -3,6 +3,7 @@ from fastapi.encoders import jsonable_encoder
 from ...redis.actions import add_active_log
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.exc import IntegrityError
+from datetime import date
 from fastapi import HTTPException, status
 from ..auth.auth import get_current_user
 from sqlalchemy.orm import selectinload
@@ -13,6 +14,8 @@ from sqlalchemy import select, func
 from redis.asyncio import Redis
 from datetime import datetime
 from sqlalchemy import select
+from fastapi.logger import logger
+from pydantic import validator
 from .schemas import *
 import traceback
 import json
@@ -352,3 +355,51 @@ async def create_goal(data: GoalData, sess: SessionDep, current_user: User = Dep
         await sess.rollback()
         print(f"General error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+class GoalProgressData(BaseModel):
+    goal_id: int
+    task_id: int
+    value: int
+    entry_id: int
+    date: str
+
+    @validator('date')
+    def validate_date(cls, v):
+        try:
+            datetime.strptime(v, "%d/%m/%Y")
+        except ValueError:
+            raise ValueError("Date must be in DD/MM/YYYY format")
+        return v
+
+@router.patch("/goals/progress")
+async def update_goal_progress( data: List[GoalProgressData], sess: SessionDep, current_user: User = Depends(get_current_user) ):
+    logger.info(f"Received progress update data: {data}")
+    updated_entries = []
+    for entry in data:
+        query = (
+            select(ChartTask)
+            .join(GoalTask, ChartTask.id_goal_task == GoalTask.id)
+            .join(Goal, GoalTask.goal_id == Goal.id)
+            .where(
+                ChartTask.id == entry.entry_id,
+                GoalTask.id == entry.task_id,
+                Goal.id == entry.goal_id,
+                Goal.user_id == current_user.id
+            )
+        )
+        result = await sess.execute(query)
+        char_entry = result.scalar_one_or_none()
+
+        if not char_entry:
+            raise HTTPException(status_code=404, detail="Chart entry not found")
+
+        char_entry.value = entry.value
+        sess.add(char_entry)
+        updated_entries.append(char_entry)
+
+    await sess.commit()
+
+    for char_entry in updated_entries:
+        await sess.refresh(char_entry)
+    
+    return {"success": True, "updated_entries": updated_entries}

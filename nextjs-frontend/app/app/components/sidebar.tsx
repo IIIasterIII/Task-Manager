@@ -64,7 +64,7 @@ const Sidebar = () => {
                 <h1 className="text-text-500 text-xs font-bold uppercase mt-4 px-2">My Projects</h1>
                 {generalRoots.map(project => <ProjectItem key={project.id} project={project} allProjects={projects} openFolders={openFolders} toggleFolder={toggleFolder}/>)}
                 <div onClick={() => dispath(toggleCreateProject(null))} className="text-text-500 text-xs 
-                font-bold mt-1 cursor-pointer hover:bg-background-900 p-2 rounded-[5] duration-300 select-none active:bg-background-800">Create new project</div>
+                font-bold mt-1 cursor-pointer hover:bg-background-900 p-2 rounded-[5] duration-300 select-none active:bg-background-800 border border-dashed border-accent/40 hover:bg-accent/5">Create new project</div>
               </div>
             </div>
             <ThemePicker/>

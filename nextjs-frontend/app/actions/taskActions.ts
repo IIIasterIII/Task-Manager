@@ -1,10 +1,16 @@
 "use server"
 import { Priority, TaskCreate } from "@/app/types/task"
-import { goalDataToSend } from '../app/goals/page';
+import { goalDataToSend } from "../app/components/ui/goalCreation";
 import { revalidatePath } from 'next/cache';
 import { cookies } from "next/headers"
 
-const BASE_URL = "http://localhost:8000"
+interface GoalProgressData {
+  goal_id: number;
+  task_id: number;
+  value: number;
+  entry_id: number;
+  date: string;
+}
 
 const getHeaders = async () => {
     const cookieStore = await cookies()
@@ -16,7 +22,7 @@ const getHeaders = async () => {
 
 export async function toggleTaskStatus(id: number, completed: boolean) {
   try {
-    const res = await fetch(`http://localhost:8000/tasks/${id}`, {
+    const res = await fetch(`${process.env.BACKEND_URL}/tasks/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_completed: completed }),
@@ -34,9 +40,8 @@ export async function toggleTaskStatus(id: number, completed: boolean) {
 export async function createTask(data: TaskCreate) {
   const cookieStore = await cookies()
   const allCookies = cookieStore.toString()
-  console.log(data)
   try {
-    const res = await fetch("http://localhost:8000/task", {
+    const res = await fetch(`${process.env.BACKEND_URL}/task`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Cookie": allCookies},
       body: JSON.stringify(data)
@@ -57,7 +62,7 @@ export const getTasks = async (parent_id: number) => {
   const allCookies = cookieStore.toString()
 
   try {
-    const res = await fetch(`http://localhost:8000/tasksss/${parent_id}`, {
+    const res = await fetch(`${process.env.BACKEND_URL}/tasksss/${parent_id}`, {
       method: "GET",
       headers: { 
         "Content-Type": "application/json", 
@@ -74,7 +79,7 @@ export const getTasks = async (parent_id: number) => {
 
 export const getPinnedTaskIds = async () => {
   try {
-      const res = await fetch(`${BASE_URL}/tasks/pinned`, {
+      const res = await fetch(`${process.env.BACKEND_URL}/tasks/pinned`, {
           method: "GET",
           headers: await getHeaders()
       })
@@ -91,7 +96,7 @@ export const getTasksByDate = async (year: number, month: number) => {
   const allCookies = cookieStore.toString()
 
   try {
-    const res = await fetch(`http://localhost:8000/tasks_by_date/${year}/${month}`, {
+    const res = await fetch(`${process.env.BACKEND_URL}/tasks_by_date/${year}/${month}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json", 
@@ -110,7 +115,7 @@ export const createGoal = async (data: goalDataToSend) => {
   const cookieStore = await cookies()
   const allCookies = cookieStore.toString()
   try {
-    const res = await fetch(`http://localhost:8000/goal`, {
+    const res = await fetch(`${process.env.BACKEND_URL}/goal`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json", 
@@ -130,7 +135,7 @@ export const getGoals = async () => {
   const cookieStore = await cookies()
   const allCookies = cookieStore.toString()
   try {
-    const res = await fetch(`http://localhost:8000/goals`, {
+    const res = await fetch(`${process.env.BACKEND_URL}/goals`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json", 
@@ -148,7 +153,7 @@ export const getGoal = async (goal_id: number) => {
   const cookieStore = await cookies()
   const allCookies = cookieStore.toString()
   try {
-    const res = await fetch(`http://localhost:8000/goal/${goal_id}`, {
+    const res = await fetch(`${process.env.BACKEND_URL}/goal/${goal_id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json", 
@@ -166,7 +171,7 @@ export const moveTask = async (direction: "up" | "down", project_id: number, tas
   const cookieStore = await cookies()
   const allCookies = cookieStore.toString()
   try {
-    const res = await fetch(`http://localhost:8000/tasks/move/${project_id}/${task_id}`, {
+    const res = await fetch(`${process.env.BACKEND_URL}/tasks/move/${project_id}/${task_id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json", 
@@ -183,9 +188,8 @@ export const moveTask = async (direction: "up" | "down", project_id: number, tas
 }
 
 export const updateTaskPriority = async (taskId: number, priority: Priority) => {
-    console.log(priority)
     try {
-        const res = await fetch(`${BASE_URL}/tasks/${taskId}/priority`, {
+        const res = await fetch(`${process.env.BACKEND_URL}/tasks/${taskId}/priority`, {
             method: "PATCH",
             headers: await getHeaders(),
             body: JSON.stringify({ priority })
@@ -197,7 +201,7 @@ export const updateTaskPriority = async (taskId: number, priority: Priority) => 
 
 export const updateTaskSchedule = async (taskId: number, date_at?: string, time_at?: string) => {
     try {
-        const res = await fetch(`${BASE_URL}/tasks/${taskId}/schedule`, {
+        const res = await fetch(`${process.env.BACKEND_URL}/tasks/${taskId}/schedule`, {
             method: "PATCH",
             headers: await getHeaders(),
             body: JSON.stringify({ date_at, time_at })
@@ -209,7 +213,7 @@ export const updateTaskSchedule = async (taskId: number, date_at?: string, time_
 
 export const deleteTask = async (taskId: number) => {
     try {
-        const res = await fetch(`${BASE_URL}/tasks/${taskId}/delete`, {
+        const res = await fetch(`${process.env.BACKEND_URL}/tasks/${taskId}/delete`, {
             method: "DELETE",
             headers: await getHeaders()
         })
@@ -220,7 +224,7 @@ export const deleteTask = async (taskId: number) => {
 
 export const togglePinTask = async (taskId: number, toPin: boolean) => {
   try {
-      const res = await fetch(`${BASE_URL}/tasks/${taskId}/pin`, {
+      const res = await fetch(`${process.env.BACKEND_URL}/tasks/${taskId}/pin`, {
           method: "PATCH",
           headers: await getHeaders(),
           body: JSON.stringify({ toPin })
@@ -242,7 +246,7 @@ export const updateTaskDetails = async (
   details: { title?: string; description?: string }
 ) => {
   try {
-      const res = await fetch(`${BASE_URL}/tasks/${taskId}/details`, {
+      const res = await fetch(`${process.env.BACKEND_URL}/tasks/${taskId}/details`, {
           method: "PATCH",
           headers: await getHeaders(),
           body: JSON.stringify(details)
@@ -256,5 +260,22 @@ export const updateTaskDetails = async (
       return await res.json()
   } catch (err) {
       return { error: "Network error" }
+  }
+}
+
+export const updateGoalProgress = async (data: GoalProgressData[]) => {
+  try {
+    const res = await fetch(`${process.env.BACKEND_URL}/goals/progress`, {
+      method: "PATCH",
+      headers: await getHeaders(),
+      body: JSON.stringify(data)
+    })
+    if (!res.ok) {
+      const error = await res.json()
+      return { error: error.detail || "Failed to update goal progress" }
+    }
+    return await res.json()
+  } catch (err) {
+    return { error: "Network error" }
   }
 }

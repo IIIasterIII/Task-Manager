@@ -7,13 +7,13 @@ const Footer = () => {
   return (
     <footer className="relative w-full bg-[#030303] pt-32 pb-16 overflow-hidden">
       {/* Эффект свечения снизу (Linear Signature Glow) */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800] h-[300] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
 
         <div className='mb-8 flex items-center justify-center w-full h-250 relative flex-col'>
         <Image src="./Cycle.svg" fill alt="a" className='absolute'/>
           <h2 className="text-xl md:text-7xl mt-25 font-bold tracking-tighter text-white z-10">
             Ready to build <br /> 
-            <span className="bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">
+            <span className="bg-linear-to-b from-white to-gray-500 bg-clip-text text-transparent">
               your best self?
             </span>
           </h2>
@@ -30,7 +30,7 @@ const Footer = () => {
         </div>
 
 
-        <div className="w-full mt-10 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent mb-12" />
+        <div className="w-full mt-10 h-[1] bg-linear-to-r from-transparent via-white/20 to-transparent mb-12" />
         {/* Нижняя часть футера */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center space-x-2">

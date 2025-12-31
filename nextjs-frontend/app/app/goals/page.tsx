@@ -38,7 +38,7 @@ const Page = () => {
     }, [router])
 
     return (
-        <div className='w-full h-full p-5 relative min-h-screen text-white flex flex-col gap-5 overflow-y-auto pb-25'>
+        <div className='w-full h-full p-5 relative min-h-auto text-white flex flex-col gap-5 overflow-y-auto pb-25'>
             <div className='w-full flex justify-end'>
                 <Button title={"Create a goal"} func={() => setOpen(true)}/>
             </div>
@@ -54,7 +54,7 @@ const Page = () => {
                             <h1 className="mb-4 font-bold text-sm">Reset progress to default?</h1>
                             <div className="flex gap-4 justify-center">
                                 <button className="px-4 py-1 bg-zinc-800 rounded text-xs hover:bg-zinc-700" onClick={() => setOpenPanel(false)}>Cancel</button>
-                                <button className="px-4 py-1 bg-red-600 rounded text-xs hover:bg-red-500" onClick={() => { /* твоя логика сброса */; setOpenPanel(false); }}>Reset</button>
+                                <button className="px-4 py-1 bg-red-600 rounded text-xs hover:bg-red-500" onClick={() => { setOpenPanel(false)}}>Reset</button>
                             </div>
                         </div>
                     </div>

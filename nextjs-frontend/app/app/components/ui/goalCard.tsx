@@ -45,10 +45,10 @@ export const GoalCard: FC<{ goal: GoalDataRes }> = ({ goal }) => {
     }
 
     return (
-        <div className="w-full bg-zinc-900 border mt-5 border-zinc-800 rounded-2xl p-5 hover:border-zinc-700 transition-all group shadow-sm">
+        <div className="w-full bg-card-bg border mt-5 border-zinc-800 rounded-2xl p-5 hover:border-zinc-700 transition-all group shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-start mb-4">
                 <div className="space-y-1">
-                    <h3 className="text-xl font-bold text-white group-hover:text-indigo-400 transition-colors">
+                    <h3 className="text-xl font-bold text-white group-hover:text-accent transition-colors">
                         {goal.title}
                     </h3>
                     <p className="text-sm text-zinc-500 line-clamp-2 italic">
@@ -108,7 +108,8 @@ export const GoalCard: FC<{ goal: GoalDataRes }> = ({ goal }) => {
                 )}
             </div>
 
-            <button onClick={() => router.push(`/app/goals/${goal.id}`)} className="w-full mt-5 py-2.5 bg-zinc-800 hover:bg-zinc-100 hover:text-black text-zinc-400 text-xs font-black uppercase tracking-widest rounded-xl transition-all active:scale-[0.98]">
+            <button onClick={() => router.push(`/app/goals/${goal.id}`)} className="w-full py-2.5 bg-accent text-site-text duration-300 hover:brightness-110
+             hover:shadow-[0_0_10px_var(--accent)] active:scale-95 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent text-xs font-black uppercase tracking-widest rounded-xl mt-5 transition-all active:scale-[0.98]">
                 View Details
             </button>
         </div>

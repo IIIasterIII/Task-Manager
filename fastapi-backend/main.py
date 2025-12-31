@@ -4,6 +4,7 @@ from src.api.auth.auth import router as AuthRouter
 from src.api.task.tasks import router as TaskRouter
 from src.db.session import init_models
 from dotenv import load_dotenv
+from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI
 import uvicorn
 import os
@@ -12,14 +13,15 @@ import time
 
 load_dotenv()
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("FASTAPI_SECRET_KEY"))
 app.include_router(AuthRouter)
 app.include_router(TaskRouter)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,    
+    allow_origins=["http://localhost:3000"], # Только так!
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

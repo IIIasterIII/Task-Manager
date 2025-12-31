@@ -15,6 +15,7 @@ class User(Base):
     id = Column(INTEGER, primary_key=True, autoincrement=True, index=True)
     email = Column(String(248), unique=True, index=True, nullable=False)
     username = Column(String(50))
+    password_hash: Mapped[str] = mapped_column(String(512), nullable=True, default=None)
     user_pic = Column(String(512))
     first_logged_in = Column(DateTime)
     last_accessed = Column(DateTime)

@@ -19,10 +19,7 @@ export default function TaskListClient({ initialTasks, initialPinnedTasks, proje
   const [isLoading, setIsLoading] = useState(false)
   const taskDataCreation = useAppSelector((state) => state.task.task)
 
-  // 1. СИНХРОНИЗАЦИЯ С СЕРВЕРОМ (Решает проблему 401/Refresh Token)
   useEffect(() => {
-    // Если сервер вернул пустоту, но мы видим в логах, что токен обновился,
-    // делаем повторный запрос на клиенте.
     const syncData = async () => {
       if (initialTasks.length === 0 && initialPinnedTasks.length === 0) {
         setIsLoading(true)
@@ -39,7 +36,6 @@ export default function TaskListClient({ initialTasks, initialPinnedTasks, proje
         }
         setIsLoading(false)
       } else {
-        // Если пропсы пришли нормальные, просто обновляем стейт
         setTasks(initialTasks);
         setPinned(initialPinnedTasks);
       }
@@ -48,7 +44,6 @@ export default function TaskListClient({ initialTasks, initialPinnedTasks, proje
     syncData();
   }, [projectId, initialTasks, initialPinnedTasks]);
 
-  // 2. ОБРАБОТКА СОЗДАНИЯ НОВОЙ ЗАДАЧИ
   useEffect(() => {
     if (!taskDataCreation || taskDataCreation.parent_id !== projectId) return
     setTasks(prev => {

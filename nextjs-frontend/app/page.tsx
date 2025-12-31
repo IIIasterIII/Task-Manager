@@ -1,5 +1,5 @@
 "use client"
-import Image from "next/image";
+
 import Footer from "./components/ui/footer";
 import GoalsSection from "./components/ui/goalsSection";
 import InfoSection from "./components/ui/infoSection";

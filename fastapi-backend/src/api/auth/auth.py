@@ -1,14 +1,21 @@
 from ..shared_logic import log_refresh_token, log_user, create_access_token, decode_token, get_current_user, oauth
 from fastapi import Depends, HTTPException, Request, Cookie, APIRouter
 from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from passlib.context import CryptContext
+from sqlalchemy import select
 from datetime import datetime, timedelta
 from ...db.session import SessionDep
 from ...db.models.models import User 
 from ...redis.redis import get_redis
 from redis.asyncio import Redis
 from jose import JWTError
-import os
+from pydantic import BaseModel
+import bcrypt
+import base64
 import httpx
+import uuid
+import os
 
 router = APIRouter()
 
@@ -92,3 +99,91 @@ async def refresh_token(access_token: str = Cookie(None), redis: Redis = Depends
         samesite="lax"
     )
     return response
+
+
+class UserData(BaseModel):
+    email: str
+    username: str
+    password: str
+    avatar: str
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def get_password_hash(password: str) -> str:
+    # Превращаем пароль в байты
+    pwd_bytes = password.encode('utf-8')
+    # Генерируем соль и хешируем
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(pwd_bytes, salt)
+    # Возвращаем строку для записи в БД
+    return hashed.decode('utf-8')
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(
+        plain_password.encode('utf-8'), 
+        hashed_password.encode('utf-8')
+    )
+
+
+
+@router.post("/auth/register")
+async def register_new_user(data: UserData, sess: SessionDep):
+    query = select(User).where(User.email == data.email)
+    res = await sess.execute(query)
+    existing_user = res.scalar_one_or_none()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="User already exists")
+    
+    header, encoded = data.avatar.split(",", 1)
+    image_data = base64.b64decode(encoded)
+
+    file_extension = "png"
+    file_name = f"{uuid.uuid4()}.{file_extension}"
+    file_path = os.path.join("static", file_name)
+
+    with open(file_path, "wb") as f:
+        f.write(image_data)
+
+    base_url = os.getenv("BASE_URL", "http://localhost:8000")
+    avatar_url = f"{base_url}/static/{file_name}"
+    
+    new_user = User(
+        email=data.email,
+        username=data.username,
+        password_hash=get_password_hash(data.password),
+        user_pic=avatar_url,
+        first_logged_in=datetime.utcnow(),
+        last_accessed=datetime.utcnow()
+    )
+    sess.add(new_user)
+    await sess.commit()
+    await sess.refresh(new_user)
+    return {"status": "user created", "user_id": new_user.id}
+
+
+class UserDataLogin(BaseModel):
+    email: str
+    password: str
+
+@router.post("/auth/login")
+async def login_user(data: UserDataLogin, sess: SessionDep, request: Request, redis: Redis = Depends(get_redis)):
+    query = select(User).where(User.email == data.email)
+    res = await sess.execute(query)
+    user = res.scalar_one_or_none()
+    if not user or not verify_password(data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    access_token = create_access_token(
+        data={"sub": str(user.id), "email": user.email}, 
+        expires_delta=timedelta(minutes=30)
+    )
+    await log_refresh_token(user.id, request, redis)
+    response = JSONResponse(content={"status": "logged in"})
+    response.set_cookie(
+        key="access_token", 
+        value=access_token, 
+        httponly=True, 
+        secure=False, # Для localhost:8000 (HTTP)
+        samesite="lax",
+        path="/"
+    )
+    return {"status": "success", "access_token": access_token}

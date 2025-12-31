@@ -44,25 +44,26 @@ const formatChartData = (tasks: Task[]) => {
     "Friday",
     "Saturday",
   ]
-  const now = new Date()
 
+  const now = new Date()
   const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date()
+    const d = new Date(now)
     d.setDate(now.getDate() - (6 - i))
-    return d
+    return {
+      date: d.toISOString().split("T")[0],
+      dayName: daysOfWeek[d.getDay()],
+    }
   })
 
-  return last7Days.map((date) => {
-    const dayStr = date.toLocaleDateString("uk-UA").replace(/\./g, "/")
-    const dayName = daysOfWeek[date.getDay()]
-
-    const entry: any = { day: dayName, fullDate: dayStr }
-
-    if (!tasks) return
+  return last7Days.map(({ date, dayName }) => {
+    const entry: any = { day: dayName, fullDate: date }
     tasks.forEach((task) => {
-      if (!task) return
-      const chartEntry = task.chart_entries?.find((e) => e.date === dayStr)
-      const value = chartEntry ? (chartEntry.value / task.target) * 100 : 0
+      if (!task || !task.chart_entries) return
+      const chartEntry = task.chart_entries.find((e) => {
+        const entryDate = e.date.split("/").reverse().join("-") 
+        return entryDate === date
+      })
+      const value = chartEntry ? (chartEntry.value / (task.target || 1)) * 100 : 0
       entry[task.title] = Math.min(value, 100).toFixed()
     })
 
@@ -84,19 +85,23 @@ const Page = () => {
     })
   }, [pathname])
 
+  useEffect(() => {
+    console.log("Goal Data:", goalData)
+  }, [goalData])
+
   const chartData = goalData ? formatChartData(goalData.tasks) : []
 
-  if (!goalData) return <div className="p-10 text-zinc-500">Loading...</div>
+  if (!goalData) return <div></div>
 
   return (
-    <div className="p-6 bg-black min-h-screen select-none">
+    <div className="p-6 bg-site-bg w-full select-none h-full overflow-y-scroll flex flex-col">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">{goalData.title}</h1>
-        <p className="text-zinc-500">{goalData.description}</p>
+        <h1 className="text-3xl font-bold text-site-text">{goalData.title}</h1>
+        <p className="text-second-text">{goalData.description}</p>
       </div>
 
-      <div className="bg-zinc-900/30 border border-zinc-800 rounded-3xl p-4">
-        <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-4 ml-4">
+      <div className="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-4">
+        <h2 className="text-sm font-bold text-second-text uppercase tracking-widest mb-4 ml-4">
           Activity (Current Week)
         </h2>
         {goalData && <MiniChart chartData={chartData} tasks={goalData.tasks} />}

@@ -1,0 +1,39 @@
+<svg width="934" height="453" viewBox="0 0 934 453" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g filter="url(#filter0_f_12_119)">
+<ellipse cx="467" cy="260" rx="417" ry="143" fill="#FF1D1D"/>
+</g>
+<g filter="url(#filter1_f_12_119)">
+<ellipse cx="467.5" cy="204.5" rx="156.5" ry="80.5" fill="#FFD8D8"/>
+</g>
+<circle cx="295" cy="102" r="2" fill="#FF2C2C"/>
+<circle cx="402" cy="68" r="2" fill="#FFD5D5"/>
+<circle cx="316" cy="79" r="2" fill="#FF2C2C"/>
+<circle cx="199" cy="138" r="2" fill="#FF2C2C"/>
+<circle cx="210" cy="104" r="2" fill="#3C0000"/>
+<circle cx="259" cy="126" r="2" fill="#FF2C2C"/>
+<circle cx="538" cy="66" r="2" fill="#FFD5D5"/>
+<circle cx="566" cy="33" r="2" fill="#FF2C2C"/>
+<circle cx="614" cy="62" r="2" fill="#FF2C2C"/>
+<circle cx="458" cy="37" r="2" fill="#FF2C2C"/>
+<circle cx="486" cy="4" r="2" fill="#3C0000"/>
+<circle cx="534" cy="33" r="2" fill="#FF2C2C"/>
+<circle cx="622" cy="106" r="2" fill="#FFD5D5"/>
+<circle cx="697" cy="41" r="2" fill="#3C0000"/>
+<circle cx="644" cy="29" r="2" fill="#3C0000"/>
+<circle cx="593" cy="2" r="2" fill="#3C0000"/>
+<circle cx="747" cy="75" r="2" fill="#3C0000"/>
+<circle cx="769" cy="142" r="2" fill="#FFD5D5"/>
+<circle cx="695" cy="116" r="2" fill="#FFD5D5"/>
+<defs>
+<filter id="filter0_f_12_119" x="0" y="67" width="934" height="386" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="25" result="effect1_foregroundBlur_12_119"/>
+</filter>
+<filter id="filter1_f_12_119" x="276" y="89" width="383" height="231" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="17.5" result="effect1_foregroundBlur_12_119"/>
+</filter>
+</defs>
+</svg>

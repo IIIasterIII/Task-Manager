@@ -1,40 +1,35 @@
 "use client"
-import { FC } from "react";
-import {
-    Plus,
-    Minus,
-    CheckCircle2,
-    Circle,
-    Target,
-    Activity,
-} from "lucide-react";
+import { Plus, Minus, CheckCircle2, Circle, Target, Activity } from "lucide-react";
+import { updateGoalProgress } from "@/app/actions/taskActions";
+import { FC, startTransition } from "react";
+import Button from "./buttons/button";
 
 interface ChartEntry {
-id: number;
-id_goal_task: number;
-value: number;
-date: string;
+  id: number;
+  id_goal_task: number;
+  value: number;
+  date: string;
 }
 
 type TaskType = "boolean" | "numeric";
 
 interface Task {
-id: number;
-goal_id: number;
-chart_entries: ChartEntry[];
-color: string;
-target: 1;
-title: string;
-type: TaskType;
+  id: number;
+  goal_id: number;
+  chart_entries: ChartEntry[];
+  color: string;
+  target: 1;
+  title: string;
+  type: TaskType;
 }
 
 interface GoalData {
-id: number;
-title: string;
-description: string;
-is_completed: false;
-user_id: number;
-tasks: Task[];
+  id: number;
+  title: string;
+  description: string;
+  is_completed: false;
+  user_id: number;
+  tasks: Task[];
 }
 
 interface LastEntriesState {
@@ -84,20 +79,30 @@ export const TaskInputSection: FC<{ goalData: GoalData; setGoalData: any }> = ({
     });
 
     console.log("Initialized Array:", initialState);
+    startTransition(async () => {
+      updateGoalProgress(initialState).then((res) => {
+        if (res.error) {
+          console.error("Error updating goal progress:", res.error);
+        } else {
+          console.log("Goal progress updated successfully:", res);
+        }
+      });
+    })
   };
 
   return (
-    <div className="flex items-center justify-center p-4">
-      <div className="w-full max-w-md flex flex-col gap-4">
+    <div className="flex items-center justify-center p-4 w-full">
+      <div className="w-full flex flex-col gap-4">
         <div className="flex items-center gap-2 mb-2 px-2">
           <Activity size={18} className="text-violet-500" />
           <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">
             Today's Progress
           </h2>
         </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
         {goalData.tasks.map((task) => {
-          const lastEntry = task.chart_entries[task.chart_entries.length - 1];
+          const chartEntries = Array.isArray(task.chart_entries) ? task.chart_entries : [];
+          const lastEntry = chartEntries[chartEntries.length - 1];
           const currentValue = lastEntry?.value || 0;
           const progress = Math.min((currentValue / task.target) * 100, 100);
           const isCompleted = currentValue >= task.target;
@@ -105,7 +110,7 @@ export const TaskInputSection: FC<{ goalData: GoalData; setGoalData: any }> = ({
           return (
             <div
               key={task.id}
-              className="group relative bg-zinc-900/50 border border-zinc-800 rounded-3xl p-4 transition-all hover:bg-zinc-800/50 hover:border-zinc-700"
+              className="group min-w-50 relative bg-zinc-900/50 border border-zinc-800 rounded-3xl p-4 transition-all hover:bg-zinc-800/50 hover:border-zinc-700"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -147,33 +152,18 @@ export const TaskInputSection: FC<{ goalData: GoalData; setGoalData: any }> = ({
                   </button>
                 ) : (
                   <div className="flex items-center bg-zinc-950 rounded-xl border border-zinc-800 p-1">
-                    <button
-                      onClick={() =>
-                        handleUpdateValue(task.id, currentValue - 1)
-                      }
-                      className="p-1 hover:text-white text-zinc-500 transition-colors"
-                    >
+                    <button onClick={() => handleUpdateValue(task.id, currentValue - 1)} className="p-1 hover:text-white text-zinc-500 transition-colors">
                       <Minus size={16} />
                     </button>
 
                     <input
                       type="number"
                       value={currentValue}
-                      onChange={(e) =>
-                        handleUpdateValue(
-                          task.id,
-                          parseInt(e.target.value) || 0
-                        )
-                      }
+                      onChange={(e) => handleUpdateValue(task.id, parseInt(e.target.value) || 0)}
                       className="w-12 bg-transparent text-center text-sm font-bold text-zinc-100 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
 
-                    <button
-                      onClick={() =>
-                        handleUpdateValue(task.id, currentValue + 1)
-                      }
-                      className="p-1 hover:text-white text-zinc-500 transition-colors"
-                    >
+                    <button onClick={() => handleUpdateValue(task.id, currentValue + 1)} className="p-1 hover:text-white text-zinc-500 transition-colors">
                       <Plus size={16} />
                     </button>
                   </div>
@@ -193,13 +183,11 @@ export const TaskInputSection: FC<{ goalData: GoalData; setGoalData: any }> = ({
             </div>
           );
         })}
-        <button
-          className="w-auto rounded-[5] py-2 cursor-pointer border-violet-700 bg-violet-600 hover:bg-violet-500 active:bg-violet-400"
-          onClick={setChanges}
-        >
-          Save Progress
-        </button>
+      </div>
+      <div className="w-full items-center flex justify-center mt-2">
+        <Button title={"Save Progress"} func={setChanges}/>
       </div>
     </div>
+  </div>
   );
 };

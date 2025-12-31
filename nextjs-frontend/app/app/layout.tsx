@@ -1,6 +1,5 @@
 "use client"
 import AppContent from "./components/appContent";
-import StoreProvider from "../lib/storeProvider";
 import { Toaster } from 'sonner';
 import { ThemeProvider } from "next-themes";
 
@@ -19,12 +18,10 @@ const ToasterComponent = () => (
 export default function Layout({ children }: { children: React.ReactNode }) {
     return (
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem themes={['dark', 'purple', 'cyber', 'midnight', 'emerald', 'obsidian']}>
-        <StoreProvider>
             <AppContent>
                 {children}
                 <ToasterComponent/>
             </AppContent>
-        </StoreProvider>
       </ThemeProvider>
     );
 }

@@ -13,18 +13,14 @@ export interface ProjectData {
 export async function createProject(data: ProjectData) {
     const cookieStore = await cookies()
     const allCookies = cookieStore.toString()
-    console.log("Data:", data)
     try {
-      const res = await fetch(`http://localhost:8000/project`, {
+      const res = await fetch(`${process.env.BACKEND_URL}/project`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Cookie": allCookies },
         body: JSON.stringify(data),
       })
-  
       if (!res.ok) return { error: "Server error" }
-
       const responseData = await res.json()
-      
       revalidatePath("/tasks") 
       return { success: true, data: responseData }
     } catch (e) {
@@ -36,17 +32,13 @@ export async function getProjects() {
     const cookieStore = await cookies()
     const allCookies = cookieStore.toString()
     try {
-      const res = await fetch(`http://localhost:8000/projects`, {
+      const res = await fetch(`${process.env.BACKEND_URL}/projects`, {
         method: "GET",
         headers: { "Content-Type": "application/json", "Cookie": allCookies }
       })
-  
       if (!res.ok) return { error: "Server error" }
-      
       revalidatePath("/tasks") 
-
       const data = await res.json()
-      console.log(data)
       return data
     } catch (e) {
       return { error: "Netword Error" }
