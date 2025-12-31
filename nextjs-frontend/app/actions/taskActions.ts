@@ -115,7 +115,7 @@ export const createGoal = async (data: goalDataToSend) => {
   const cookieStore = await cookies()
   const allCookies = cookieStore.toString()
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/goal`, {
+    const res = await fetch(`${process.env.BACKEND_URL}/goals`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json", 
@@ -153,7 +153,7 @@ export const getGoal = async (goal_id: number) => {
   const cookieStore = await cookies()
   const allCookies = cookieStore.toString()
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/goal/${goal_id}`, {
+    const res = await fetch(`${process.env.BACKEND_URL}/goals/${goal_id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json", 

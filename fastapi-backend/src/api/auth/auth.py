@@ -1,23 +1,22 @@
 from ..shared_logic import log_refresh_token, log_user, create_access_token, decode_token, get_current_user, oauth
 from fastapi import Depends, HTTPException, Request, Cookie, APIRouter
 from fastapi.responses import RedirectResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 from passlib.context import CryptContext
-from sqlalchemy import select
 from datetime import datetime, timedelta
 from ...db.session import SessionDep
 from ...db.models.models import User 
 from ...redis.redis import get_redis
 from redis.asyncio import Redis
-from jose import JWTError
 from pydantic import BaseModel
+from sqlalchemy import select
+from jose import JWTError
 import bcrypt
 import base64
 import httpx
 import uuid
 import os
 
-router = APIRouter()
+router = APIRouter(tags=["Auth"])
 
 @router.get("/login")
 async def login(request: Request):
@@ -110,12 +109,9 @@ class UserData(BaseModel):
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password: str) -> str:
-    # Превращаем пароль в байты
     pwd_bytes = password.encode('utf-8')
-    # Генерируем соль и хешируем
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(pwd_bytes, salt)
-    # Возвращаем строку для записи в БД
     return hashed.decode('utf-8')
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -134,7 +130,7 @@ async def register_new_user(data: UserData, sess: SessionDep):
     if existing_user:
         raise HTTPException(status_code=400, detail="User already exists")
     
-    header, encoded = data.avatar.split(",", 1)
+    _, encoded = data.avatar.split(",", 1)
     image_data = base64.b64decode(encoded)
 
     file_extension = "png"
@@ -182,7 +178,7 @@ async def login_user(data: UserDataLogin, sess: SessionDep, request: Request, re
         key="access_token", 
         value=access_token, 
         httponly=True, 
-        secure=False, # Для localhost:8000 (HTTP)
+        secure=False,
         samesite="lax",
         path="/"
     )

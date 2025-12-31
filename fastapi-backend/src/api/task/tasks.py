@@ -1,12 +1,8 @@
-from src.db.models.models import User, Task, Project, ProjectTasks, Goal, GoalTask, ChartTask
-from fastapi.encoders import jsonable_encoder
+from src.db.models.models import User, Task, ProjectTasks
 from ...redis.actions import add_active_log
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.exc import IntegrityError
-from datetime import date
 from fastapi import HTTPException, status
 from ..auth.auth import get_current_user
-from sqlalchemy.orm import selectinload
 from fastapi import APIRouter, Depends
 from ...redis.redis import get_redis
 from ...db.session import SessionDep
@@ -14,13 +10,10 @@ from sqlalchemy import select, func
 from redis.asyncio import Redis
 from datetime import datetime
 from sqlalchemy import select
-from fastapi.logger import logger
-from pydantic import validator
 from .schemas import *
 import traceback
-import json
 
-router = APIRouter()
+router = APIRouter(tags=["Tasks"])
 
 @router.delete("/tasks/{id}/delete")
 async def delete_task_by_id(id: int, sess: SessionDep, current_user: User = Depends(get_current_user)):
@@ -70,13 +63,6 @@ async def create_new_task(task_data: TaskData, sess: SessionDep, current_user: U
 
 
 
-@router.get("/history")
-async def get_history(current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
-    logs = await redis.lrange(f"activity_log:{current_user.id}", 0, -1)
-    return [json.loads(log) for log in logs]
-
-
-
 @router.patch("/tasks/move/{project_id}/{task_id}")
 async def move_task(project_id: int, task_id: int, data: TaskPriorityRequest, sess: SessionDep, current_user: User = Depends(get_current_user)):
     query = select(ProjectTasks).where( ProjectTasks.task_id == task_id, ProjectTasks.project_id == project_id )
@@ -102,16 +88,9 @@ async def move_task(project_id: int, task_id: int, data: TaskPriorityRequest, se
 
 @router.get("/tasksss/{parent_id}", response_model=List[TaskDTO])
 async def get_tasks(parent_id: int, sess: SessionDep, current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
-    #cache_key = f"user:{current_user.id}:parent:{parent_id}:tasks"
-    #cached_projects = await redis.get(cache_key)
-    #if cached_projects:
-    #    return json.loads(cached_projects)
     query = (select(Task).join(ProjectTasks).where(Task.user_id == current_user.id, ProjectTasks.project_id == parent_id).order_by(ProjectTasks.position.asc()))
     result = await sess.execute(query)
     tasks = result.scalars().all()
-
-    tasks_data = jsonable_encoder(tasks)
-    #await redis.set(cache_key, json.dumps(tasks_data), ex=3600)
     return tasks
     
 
@@ -134,52 +113,6 @@ async def complete_task(id: int, sess: SessionDep, current_user: User = Depends(
     
 
 
-@router.post("/project", status_code=201, response_model=ProjectDTO)
-async def create_new_project(project_data: ProjectCreate, sess: SessionDep, current_user: User = Depends(get_current_user)):
-    new_project = Project(
-        name=project_data.name,
-        color=project_data.color,
-        favorite=project_data.favorite,
-        parent_id=project_data.parent_id,
-        user_id=current_user.id
-    )
-    try:
-        sess.add(new_project)
-        await sess.commit()
-        await sess.refresh(new_project)
-        return new_project
-    except IntegrityError as e:
-        await sess.rollback()
-        if "Duplicate entry" in str(e.orig):
-            raise HTTPException( status_code=status.HTTP_400_BAD_REQUEST, detail=f"Project with name '{project_data.name}' already exists" )
-        raise HTTPException( status_code=status.HTTP_400_BAD_REQUEST, detail="Integrity constraint violation (check parent_id or user_id)" )
-    except Exception as e:
-        await sess.rollback()
-        print(f"Unexpected error: {e}")
-        raise HTTPException( status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred on the server" )
-    
-
-
-@router.get("/projects", response_model_by_alias=List[ProjectDTO])
-async def get_projects(sees: SessionDep, current_user: User = Depends(get_current_user), redis: Redis = Depends(get_redis)):
-    #cache_key = f"user:{current_user.id}:projects"
-    #cached_projects = await redis.get(cache_key)
-    #if cached_projects:
-    #    return json.loads(cached_projects)
-    query = select(Project).where(Project.user_id == current_user.id)
-    res = await sees.execute(query)
-    projects = res.scalars().all()
-
-    projects_data = [
-        {"id": p.id, "name": p.name, "color": p.color, "is_favorite": p.favorite, "parent_id": p.parent_id} 
-        for p in projects
-    ]
-
-    #await redis.set(cache_key, json.dumps(projects_data), ex=3600)
-    return projects_data
-
-
-
 @router.patch("/editTask/{id}")
 async def update_task( id: int, task_data: dict, sess: SessionDep, current_user: User = Depends(get_current_user)):
     query = select(Task).where(Task.user_id == current_user.id, Task.id == id)
@@ -193,49 +126,6 @@ async def update_task( id: int, task_data: dict, sess: SessionDep, current_user:
     sess.commit()
     sess.refresh(db_task)
     return {"success": True, "data": db_task}
-
-
-
-@router.get("/goals")
-async def get_goals(sess: SessionDep, current_user: User = Depends(get_current_user)):
-    query = ( select(Goal).where(Goal.user_id == current_user.id).options(selectinload(Goal.tasks)) )
-    result = await sess.execute(query)
-    goals = result.scalars().unique().all()
-    return goals
-
-
-
-@router.get("/goal/{goal_id}")
-async def get_goal_with_today_progress( goal_id: int, sess: SessionDep, current_user: User = Depends(get_current_user) ):
-    query = (
-        select(Goal)
-        .where(Goal.user_id == current_user.id, Goal.id == goal_id)
-        .options(
-            selectinload(Goal.tasks)
-            .selectinload(GoalTask.chart_entries)
-        )
-    )
-    result = await sess.execute(query)
-    goal = result.scalars().unique().one_or_none()
-    if not goal:
-        raise HTTPException(status_code=404, detail="Goal not found")
-    today_str = datetime.now().strftime("%d/%m/%Y")
-    was_modified = False
-    for task in goal.tasks:
-        today_entry = next((entry for entry in task.chart_entries if entry.date == today_str), None)
-        if not today_entry:
-            new_chart_entry = ChartTask(
-                id_goal_task=task.id,
-                value=0,
-                date=today_str
-            )
-            sess.add(new_chart_entry)
-            task.chart_entries.append(new_chart_entry)
-            was_modified = True
-    if was_modified:
-        await sess.commit()
-        await sess.refresh(goal)
-    return goal
 
 
 
@@ -308,98 +198,3 @@ async def patch_task_details( task_id: int, data: TaskDetailsUpdate, sess: Sessi
     await sess.commit()
     await sess.refresh(task)
     return {"success": True, "task": task}
-
-
-
-@router.post("/goal")
-async def create_goal(data: GoalData, sess: SessionDep, current_user: User = Depends(get_current_user)):
-    try:
-        db_goal = Goal(
-            title=data.title,
-            description=data.description,
-            is_completed=False,
-            user_id=current_user.id
-        )
-        sess.add(db_goal)
-        await sess.flush() 
-
-        today_str = datetime.now().strftime("%d/%m/%Y")
-        for task_item in data.tasks:
-            new_task = GoalTask(
-                goal_id=db_goal.id,
-                title=task_item.title,
-                target=task_item.target,
-                color=task_item.color,
-                type=task_item.type
-            )
-            sess.add(new_task)
-            await sess.flush()
-            new_entry = ChartTask(
-                id_goal_task=new_task.id,
-                value=0,
-                date=today_str
-            )
-            sess.add(new_entry)
-
-        await sess.commit()
-        final_query = ( select(Goal).where(Goal.id == db_goal.id).options( selectinload(Goal.tasks).selectinload(GoalTask.chart_entries) ))
-        result = await sess.execute(final_query)
-        full_goal = result.scalars().unique().one()
-        return full_goal
-
-    except SQLAlchemyError as e:
-        await sess.rollback()
-        print(f"Database error: {e}")
-        raise HTTPException(status_code=500, detail="Database integrity error")
-    except Exception as e:
-        await sess.rollback()
-        print(f"General error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-class GoalProgressData(BaseModel):
-    goal_id: int
-    task_id: int
-    value: int
-    entry_id: int
-    date: str
-
-    @validator('date')
-    def validate_date(cls, v):
-        try:
-            datetime.strptime(v, "%d/%m/%Y")
-        except ValueError:
-            raise ValueError("Date must be in DD/MM/YYYY format")
-        return v
-
-@router.patch("/goals/progress")
-async def update_goal_progress( data: List[GoalProgressData], sess: SessionDep, current_user: User = Depends(get_current_user) ):
-    logger.info(f"Received progress update data: {data}")
-    updated_entries = []
-    for entry in data:
-        query = (
-            select(ChartTask)
-            .join(GoalTask, ChartTask.id_goal_task == GoalTask.id)
-            .join(Goal, GoalTask.goal_id == Goal.id)
-            .where(
-                ChartTask.id == entry.entry_id,
-                GoalTask.id == entry.task_id,
-                Goal.id == entry.goal_id,
-                Goal.user_id == current_user.id
-            )
-        )
-        result = await sess.execute(query)
-        char_entry = result.scalar_one_or_none()
-
-        if not char_entry:
-            raise HTTPException(status_code=404, detail="Chart entry not found")
-
-        char_entry.value = entry.value
-        sess.add(char_entry)
-        updated_entries.append(char_entry)
-
-    await sess.commit()
-
-    for char_entry in updated_entries:
-        await sess.refresh(char_entry)
-    
-    return {"success": True, "updated_entries": updated_entries}

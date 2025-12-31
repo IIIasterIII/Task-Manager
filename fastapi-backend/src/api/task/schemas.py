@@ -1,13 +1,7 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from typing import Optional, Literal, List
-import enum
 from datetime import date, time
-
-class ProjectCreate(BaseModel):
-    name: str
-    color: str
-    favorite: bool = False
-    parent_id: Optional[int] = None
+import enum
 
 class TaskPriority(str, enum.Enum):
     LOW = "LOW"
@@ -22,14 +16,6 @@ class TaskData(BaseModel):
     parent_id: int
     date_at: Optional[date] = None
     time_at: Optional[time] = None
-
-class ProjectDTO(BaseModel):
-    id: int
-    name: str
-    color: str
-    favorite: bool
-    parent_id: Optional[int] = None
-    model_config = ConfigDict(from_attributes=True)
 
 class TaskDTO(BaseModel):
     id: int
