@@ -1,8 +1,7 @@
 "use client"
-
 import { LucideIcon } from "lucide-react";
-import { FC } from "react";
 import { motion } from "motion/react"
+import { FC } from "react";
 
 interface BlockProps {
     Icon: LucideIcon | string;

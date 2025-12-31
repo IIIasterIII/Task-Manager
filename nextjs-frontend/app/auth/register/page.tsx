@@ -4,7 +4,6 @@ import { motion } from "motion/react"
 import { Mail, Lock, ArrowRight, User, ShieldCheck, Camera } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Postregister } from "@/app/actions/apiClient"
-useRouter
 
 const Page = () => {
   const [userData, setUserData] = useState({

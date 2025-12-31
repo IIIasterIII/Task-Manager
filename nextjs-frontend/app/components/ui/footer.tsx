@@ -1,12 +1,10 @@
 "use client";
-
 import Image from 'next/image';
-import React from 'react';
 
 const Footer = () => {
   return (
-    <footer className="relative w-full bg-[#030303] pt-32 pb-16 overflow-hidden">
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800] h-[300] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
+    <footer id='contacts' className="relative w-full bg-[#030303] pt-32 pb-16 overflow-hidden">
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800] h-[300] bg-white/5 blur-[120px] rounded-full pointer-events-none" />
 
         <div className='mb-8 flex items-center justify-center w-full h-250 relative flex-col'>
         <Image src="./Cycle.svg" fill alt="a" className='absolute'/>
@@ -23,31 +21,49 @@ const Footer = () => {
 
         <button className="group z-10 relative px-10 py-4 bg-white text-black font-bold rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
           Get Started for free
-          <div className="absolute inset-0 rounded-full border border-white/20 group-hover:border-white/40 transition-colors" />
+          <div className="absolute inset-0 rounded-full border border-[#FE0C46]/20 group-hover:border-[#FE0C46]/40 transition-colors" />
         </button>
         </div>
 
 
-        <div className="w-full mt-10 h-[1] bg-linear-to-r from-transparent via-white/20 to-transparent mb-12" />
-        {/* Нижняя часть футера */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 bg-white rounded flex items-center justify-center">
-              <div className="w-3 h-3 bg-black rounded-sm" />
+        <div className="mt-16 h-[1] bg-linear-to-r from-transparent via-white/30 to-transparent mb-12" />
+        <div className="flex flex-col md:flex-row justify-between items-center gap-8 px-2 mx-10">
+          
+          <div className="flex items-center gap-4 group cursor-default">
+            <div className="relative w-10 h-10 rounded-full overflow-hidden border border-white/10 ring-2 ring-[#FE0C46]/20 group-hover:ring-[#FE0C46]/50 transition-all duration-500">
+              <Image 
+                src="https://avatars.githubusercontent.com/u/161053846?v=4" 
+                fill 
+                alt="IIIasterIII" 
+                className="object-cover"
+              />
             </div>
-            <span className="text-white font-semibold tracking-tight">FocusOS</span>
+            <div className="flex flex-col">
+              <span className="text-white text-xs font-bold tracking-tight">IIIasterIII</span>
+              <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest">Full Stack Developer</span>
+            </div>
           </div>
 
-          <nav className="flex space-x-8 text-sm text-gray-500 font-light">
-            <a href="#" className="hover:text-white transition-colors">Twitter</a>
-            <a href="#" className="hover:text-white transition-colors">GitHub</a>
-            <a href="#" className="hover:text-white transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms</a>
+          <nav className="flex space-x-8 text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500">
+            <a href="https://github.com/IIIasterIII" target="_blank" className="hover:text-[#FE0C46] transition-colors duration-300">GitHub</a>
+            <a href="#" className="hover:text-[#FE0C46] transition-colors duration-300">Privacy</a>
+            <a href="#" className="hover:text-[#FE0C46] transition-colors duration-300">Terms</a>
           </nav>
 
-          <p className="text-xs text-gray-600">
-            © 2024 FocusOS Inc. Built for the future.
-          </p>
+          <div className="flex flex-col items-end gap-2">
+              <div className="flex items-center gap-3 pl-2 group cursor-pointer relative z-100">
+              <div className="relative">
+                <div className="absolute inset-0 bg-[#FE0C46] blur-[12] opacity-40 group-hover:opacity-60 transition-opacity" />
+                <div className="relative w-8 h-8 bg-[#FE0C46] rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(254,12,70,0.6)]">
+                  <div className="w-5 h-5 border-2 border-white rounded-full opacity-90" />
+                </div>
+              </div>
+              <span className="font-semibold text-white tracking-tight">FullTM</span>
+            </div>
+            <p className="text-[9px] mt-2 text-zinc-600 font-bold uppercase tracking-widest">
+              © 2025 FocusOS Inc. Built for the future.
+            </p>
+          </div>
         </div>
     </footer>
   );

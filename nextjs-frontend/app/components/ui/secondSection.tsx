@@ -1,13 +1,12 @@
 "use client"
-
-import { motion } from "motion/react"
 import { Zap, Target, Shield } from 'lucide-react';
+import { motion } from "motion/react"
 import Block from "./block";
+
 const SecondSection = () => {
   return (
-    <section className="relative w-full min-h-screen flex flex-col items-center justify-center bg-[#030303] px-6 py-20 overflow-hidden">
+    <section id="info" className="relative w-full min-h-screen flex flex-col items-center justify-center bg-[#030303] px-6 py-20 overflow-hidden">
       
-      {/* Сетка фичей */}
       <section className="mt-32 w-full max-w-6xl px-6 grid grid-cols-1 md:grid-cols-3 gap-8 pb-20 mb-32 relative z-10">
         <Block 
             Icon={Zap}
@@ -29,7 +28,6 @@ const SecondSection = () => {
         />
       </section>
       
-      {/* Визуальный блок (Плеер/Дашборд) */}
       <div className="relative w-full max-w-[1000] aspect-video rounded-2xl bg-[#0A0A0A] shadow-2xl overflow-hidden group">
         <div 
           className="absolute inset-0 rounded-2xl pointer-events-none"
@@ -71,7 +69,7 @@ const SecondSection = () => {
           Visual Progress Tracking
         </motion.h2>
         
-        <motion.p 
+        <motion.p id="features"
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -89,7 +87,6 @@ const SecondSection = () => {
         </motion.button>
       </div>
 
-      {/* Фоновая сетка */}
       <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" 
            style={{ 
              backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, 

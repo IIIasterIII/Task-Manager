@@ -5,7 +5,6 @@ import { startTransition, useEffect, useState } from "react"
 import { MiniChart } from "../../components/ui/miniChart"
 import { getGoal } from "@/app/actions/taskActions"
 import { TaskInputSection } from "../../components/ui/taskInputSection"
-import { toast } from "sonner"
 import { notify } from "@/app/lib/notifier"
 
 interface ChartEntry {

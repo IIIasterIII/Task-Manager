@@ -1,13 +1,13 @@
 "use client"
-import { useState } from 'react';
 import { motion, AnimatePresence } from "motion/react";
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
-  const menuItems = ['Second', 'Info', 'Goals', 'Features', 'Contacts'];
+  const menuItems = ['Home', 'Info', 'Features', 'Goals', 'Contacts'];
 
   const menuVariants = {
     closed: {
@@ -40,7 +40,7 @@ const Navbar = () => {
           <span className="font-semibold text-white tracking-tight">FullTM</span>
         </div>
 
-        <div className="hidden md:flex items-center gap-1 bg-white/5 px-1 py-1 rounded-full border border-white/5">
+        <div className="hidden md:flex items-center gap-1 bg-white/5 px-1 py-1 rounded-full border border-white/5 scroll-smooth">
           {menuItems.map((item) => (
             <a
               key={item}

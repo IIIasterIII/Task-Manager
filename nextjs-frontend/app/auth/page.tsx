@@ -2,14 +2,11 @@
 import { Mail, Lock, ArrowRight } from "lucide-react"
 import { motion } from "motion/react"
 import { useRouter } from "next/navigation"
-import { startTransition, useState } from "react"
+import { useState } from "react"
 import { PostLogIn } from "../actions/apiClient"
-import { useAppDispatch } from "../lib/hook"
-import { setUserData } from "../features/ui/userSlice"
 
 const Page = () => {
   const router = useRouter()
-  const dispath = useAppDispatch()
   const [userData, serUserData] = useState({
     email: "",
     password: ""

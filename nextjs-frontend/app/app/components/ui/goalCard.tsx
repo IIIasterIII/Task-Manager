@@ -18,14 +18,6 @@ interface ChartDataPoint {
     [taskTitle: string]: number | string
 }
 
-interface GoalData {
-    title: string
-    description: string
-    is_completed: boolean
-    tasks: GoalTask[];
-    chartData: ChartDataPoint[];
-}
-
 interface GoalDataRes {
     id: number
     title: string

@@ -1,10 +1,10 @@
-import Image from 'next/image'
 import { ArrowRight, BookOpen } from 'lucide-react'
 import { motion } from "motion/react"
+import Image from 'next/image'
 
 const MainSection = () => {
   return (
-    <main className='min-h-screen w-full flex flex-col items-center bg-site-bg overflow-hidden mt-50'>
+    <main id='home' className='min-h-screen w-full flex flex-col items-center bg-site-bg overflow-hidden mt-50 scroll-mt-100'>
       <motion.h1
         initial={{ opacity: 0, y: 25 }}
         animate={{ opacity: 1, y: 0 }}
@@ -33,13 +33,14 @@ const MainSection = () => {
           </span>
         </motion.button>
 
-        <motion.button
+        <motion.a
           initial={{opacity: 0, scale: 0.9, y: 15}}
           animate={{opacity: 1, scale: 1, y: 0}}
           transition={{duration: .5, delay: .6}}
+          href="https://github.com/IIIasterIII"
          className="group cursor-pointer duration-700 relative px-6 py-2.5 bg-white/5 text-white font-medium rounded-full border border-white/10 backdrop-blur-sm transition-all hover:bg-white/10 hover:border-[#FE0C46]/40">
-          <span className="flex items-center gap-2"><BookOpen size={18} className="text-[#FE0C46]" /> Documentation </span>
-        </motion.button>
+          <span className="flex items-center gap-2"><BookOpen size={18} className="text-[#FE0C46]"/> Documentation </span>
+        </motion.a>
       </div>
 
       <div className='relative mt-16 w-full max-w-[1000]'>
@@ -54,7 +55,7 @@ const MainSection = () => {
           animate={{opacity: 1, y: 0}}
           transition={{ease: "easeInOut", duration: .5, delay: .3}}
            className='relative w-full aspect-16/10 rounded-2xl border border-card-border bg-[#FE0C46]/50 shadow-2xl 
-          overflow-hidden mask-image:linear-gradient(to_bottom,black_20%,transparent_100%)'>
+          overflow-hidden [mask-image:[linear-gradient(to_bottom,black_20%,transparent_100%)]'>
             <Image 
               fill 
               priority

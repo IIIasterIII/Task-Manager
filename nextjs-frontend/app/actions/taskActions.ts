@@ -1,6 +1,6 @@
 "use server"
-import { Priority, TaskCreate } from "@/app/types/task"
 import { goalDataToSend } from "../app/components/ui/goalCreation";
+import { Priority, TaskCreate } from "@/app/types/task"
 import { revalidatePath } from 'next/cache';
 import { cookies } from "next/headers"
 
