@@ -17,11 +17,11 @@ import {
   ChevronDown,
   Sparkles
 } from "lucide-react";
+import { notify } from "@/app/lib/notifier";
 
 export default function TaskCreation() {
   const dispatch = useAppDispatch();
   const isPanelId = useAppSelector((state) => state.ui.panel_id);
-  const [openSettings, setOpenSettings] = useState(false);
   const [task, setTask] = useState<Task>({
     title: "",
     description: "",
@@ -40,10 +40,11 @@ export default function TaskCreation() {
     };
 
     dispatch(setTaskOptimistic(optimisticTask));
-    dispatch(toggleModal(null)); // Закрываем модалку сразу для скорости
+    dispatch(toggleModal(null))
 
     startTransition(async () => {
       const res = await createTask(task);
+      notify(res)
       if(res.success) dispatch(confirmTask(res.data));
       else dispatch(clearTask());
     });

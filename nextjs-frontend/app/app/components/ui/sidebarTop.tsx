@@ -5,6 +5,7 @@ import { logout } from "@/app/features/ui/userSlice"
 import { FC, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Logs } from "lucide-react"
+import { notify } from "@/app/lib/notifier"
 
 interface HoverPanelProps {
   close: boolean
@@ -21,6 +22,7 @@ const HoverPanel : FC<HoverPanelProps> = ({close, setClose}) => {
   const handleLogout = async () => {
     deleteCookie()
     dispath(logout())
+    notify({message: "Logged out successfully"}, "Logged out successfully")
     router.replace("/")
   }
 

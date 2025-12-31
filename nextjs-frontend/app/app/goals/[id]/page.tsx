@@ -5,6 +5,8 @@ import { startTransition, useEffect, useState } from "react"
 import { MiniChart } from "../../components/ui/miniChart"
 import { getGoal } from "@/app/actions/taskActions"
 import { TaskInputSection } from "../../components/ui/taskInputSection"
+import { toast } from "sonner"
+import { notify } from "@/app/lib/notifier"
 
 interface ChartEntry {
   id: number
@@ -81,7 +83,9 @@ const Page = () => {
 
     startTransition(async () => {
       const res = await getGoal(Number(goalId))
-      setGoalData(res)
+      if(notify(res)){
+        setGoalData(res)
+      }
     })
   }, [pathname])
 

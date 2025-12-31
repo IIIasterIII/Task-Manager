@@ -1,5 +1,6 @@
 "use client"
 import { getHistory } from '@/app/actions/apiClient'
+import { notify } from '@/app/lib/notifier'
 import { useEffect, useState } from 'react'
 
 interface History {
@@ -14,7 +15,7 @@ const Page = () => {
   useEffect(() => {
     const fetchData = async () => {
       const res = await getHistory()
-      if (res.success) {
+      if (notify(res)) {
         setHistory(res.data)
       }
     }
@@ -31,12 +32,9 @@ const Page = () => {
       minute: '2-digit',
     });
   };
-
-  if (history.length === 0) {
-    return <p className="text-second-text 0 italic">No logs found.</p>
-  }
-
+  
   return (
+    history.length === 0 ? <p className='text-second-text 0 italic'></p> :
     <div className='p-6 flex flex-col gap-6 max-w-2xl mx-auto select-none h-screen'>
       <div className="flex items-center justify-between border-b border-white/5 pb-4">
         <h1 className="text-2xl font-black tracking-tight text-site-text">Action History</h1>

@@ -3,6 +3,7 @@ import { Plus, Minus, CheckCircle2, Circle, Target, Activity } from "lucide-reac
 import { updateGoalProgress } from "@/app/actions/taskActions";
 import { FC, startTransition } from "react";
 import Button from "./buttons/button";
+import { notify } from "@/app/lib/notifier";
 
 interface ChartEntry {
   id: number;
@@ -78,14 +79,9 @@ export const TaskInputSection: FC<{ goalData: GoalData; setGoalData: any }> = ({
       }
     });
 
-    console.log("Initialized Array:", initialState);
     startTransition(async () => {
       updateGoalProgress(initialState).then((res) => {
-        if (res.error) {
-          console.error("Error updating goal progress:", res.error);
-        } else {
-          console.log("Goal progress updated successfully:", res);
-        }
+        notify(res)
       });
     })
   };

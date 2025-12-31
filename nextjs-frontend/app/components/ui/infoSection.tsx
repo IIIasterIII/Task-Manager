@@ -5,7 +5,6 @@ const InfoSection = () => {
     <div className="min-h-screen bg-[#030303] text-white py-24 px-6 selection:bg-blue-500/30">
       <div className="max-w-6xl mx-auto">
         
-        {/* Первая секция: Заголовок и темы */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-32">
           <div>
             <div className="inline-flex items-center space-x-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full mb-6">
@@ -23,7 +22,6 @@ const InfoSection = () => {
             </p>
           </div>
 
-          {/* Визуальный элемент для тем (Карточки-превью) */}
           <div className="grid grid-cols-3 gap-4">
             {['#171717', '#064e3b', '#1e3a8a', '#4c1d95', '#7c2d12', '#0f172a'].map((color, i) => (
               <div 
@@ -31,7 +29,7 @@ const InfoSection = () => {
                 className="h-32 rounded-2xl border border-white/10 hover:border-white/30 transition-all cursor-pointer group relative overflow-hidden"
                 style={{ backgroundColor: color }}
               >
-                <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-tr from-black/40 to-transparent" />
               </div>
             ))}
           </div>
@@ -40,7 +38,7 @@ const InfoSection = () => {
         {/* Вторая секция: Смарт-дедлайны */}
         <div className="relative group">
           {/* Свечение на фоне */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-3xl blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
+          <div className="absolute -inset-1 bg-linear-to-r from-blue-600 to-cyan-600 rounded-3xl blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
           
           <div className="relative bg-[#0A0A0A] border border-white/5 rounded-3xl p-12 overflow-hidden">
             <div className="max-w-2xl">

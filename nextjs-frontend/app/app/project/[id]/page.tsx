@@ -1,9 +1,9 @@
 "use client"
 import { getPinnedTaskIds, getTasks } from '@/app/actions/taskActions'
+import BackdropLoading from '@/app/components/ui/backdropLoading'
+import { useEffect, useState, use } from 'react'
 import TaskListClient from './taskListClient'
 import { TaskDTO } from '@/app/types/task'
-import { useEffect, useState, use } from 'react'
-import BackdropLoading from '@/app/components/ui/backdropLoading'
 
 export default function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)

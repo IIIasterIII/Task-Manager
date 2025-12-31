@@ -1,10 +1,10 @@
 "use client"
 import { deleteTask, togglePinTask, getTasks, getPinnedTaskIds } from '@/app/actions/taskActions'
 import { startTransition, useEffect, useState } from 'react'
+import { motion, AnimatePresence } from "motion/react"
 import { useAppSelector } from '@/app/lib/hook'
 import Task from '../../components/ui/task'
 import { TaskDTO } from '@/app/types/task'
-import { motion, AnimatePresence } from "motion/react"
 import { Pin, Inbox } from 'lucide-react'
 
 interface Props {

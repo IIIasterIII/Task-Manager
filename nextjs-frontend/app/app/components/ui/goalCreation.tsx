@@ -4,6 +4,7 @@ import { FC, useState, startTransition } from 'react'
 import { MiniChart } from './miniChart' 
 import { motion } from "motion/react"
 import { toast } from 'sonner'
+import { notify } from '@/app/lib/notifier'
 
 type TaskType = 'boolean' | 'numeric'
 
@@ -110,7 +111,8 @@ const GoalCreation: FC<GoalCreationProps> = ({ setOpen, setOpenPanel, setGoalLis
 
         startTransition(async () => {
             const res = await createGoal(dataToSend)
-            if (res?.success) {
+            if (notify(res?.data)) {
+                if(!res?.success) return
                 setGoalListData((prev: any) => [...prev, res.data])
                 setOpen(false)
                 toast.success("Goal launched!")

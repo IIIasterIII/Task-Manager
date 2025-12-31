@@ -1,7 +1,5 @@
 "use server"
-
 import { cookies } from "next/headers";
-
 
 export async function deleteCookie() {
     const cookiesStore = await cookies()
@@ -65,5 +63,38 @@ export const PostLogIn = async (email: string, password: string) => {
         return { success: true, resData }
     } catch (e) {
         return { error: "Network Error (Check CORS or Backend status)" };
+    }
+}
+
+
+export async function checkMe() {
+    const cookieStore = await cookies()
+    const allCookies = cookieStore.toString()
+    try {
+        let res = await fetch(`${process.env.BACKEND_URL}/me`, {
+            method: "POST",
+            headers: { "Cookie": allCookies },
+            cache: 'no-store'
+        })
+        if (res.status === 401) {
+            const refreshRes = await fetch(`${process.env.BACKEND_URL}/refresh`, {
+                method: "POST",
+                headers: { "Cookie": allCookies },
+                cache: 'no-store'
+            })
+            if (refreshRes.ok) {
+                const newCookies = refreshRes.headers.get('set-cookie') || ""
+                res = await fetch(`${process.env.BACKEND_URL}/me`, {
+                    method: "POST",
+                    headers: { "Cookie": newCookies || allCookies },
+                    cache: 'no-store'
+                })
+            }
+        }
+        if (!res.ok) return { success: false, status: res.status }
+        const data = await res.json()
+        return { success: true, data }
+    } catch (e) {
+        return { success: false, error: "Network Error" }
     }
 }

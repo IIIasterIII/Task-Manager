@@ -4,6 +4,7 @@ import { FC, useState, useRef, useEffect, startTransition, SetStateAction, Dispa
 import { Calendar, Clock, MoreVertical, ArrowUp, ArrowDown, Pencil, Copy, Trash2, Pin, ChevronRight, CalendarDays, Sun, Ban, Sparkles, ShieldAlert, ShieldCheck, Shield, Zap, Check, X } from 'lucide-react'
 import { createTask, moveTask, updateTaskDetails, updateTaskPriority, updateTaskSchedule } from '@/app/actions/taskActions'
 import { Priority, TaskCreate, TaskDTO } from '@/app/types/task'
+import { notify } from '@/app/lib/notifier'
 
 interface TaskProps {
     data: TaskDTO,
@@ -68,7 +69,8 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
         setIsEditing(false)
 
         startTransition(async () => {
-            await updateTaskDetails(data.id, { title: editedTitle })
+            const res = await updateTaskDetails(data.id, { title: editedTitle })
+            notify(res)
         })
     }
 
@@ -138,7 +140,7 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
         startTransition(async () => {
             if(!data.parent_id) return
             const res = await moveTask(move, data.parent_id, data.id)
-            console.log(res)
+            notify(res)
         })
     }
 
@@ -168,11 +170,10 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
     
         startTransition(async () => {
             const result = await updateTaskSchedule(data.id, newDate, newTime);
-            if (result.error) {
-                console.error("Error data request:", result.error);
+            notify(result);
             }
-        });
-    };
+        )
+    }
 
     const handleDuplicate = () => {
         const newTask : TaskCreate = {
@@ -184,6 +185,7 @@ const Task: FC<TaskProps> = ({ data, tasks, index, setTasks, pinned, setPinned, 
         startTransition(async () => {
             const res = await createTask(newTask)
             if(res.data) setTasks([...tasks, res.data])
+            notify(res)
         })
     }
 

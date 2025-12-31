@@ -7,6 +7,7 @@ import { toggleCreateProject } from '@/app/features/ui/userSlice'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Folder, Plus, Palette, ChevronDown, Star, FolderPlus } from 'lucide-react'
 import { confirmProject } from '@/app/features/ui/taskSlice'
+import { notify } from '@/app/lib/notifier'
 useAppSelector
 
 export interface ProjectData {
@@ -35,9 +36,10 @@ const ProjectCreation = () => {
     if (!project.name.trim()) return
     startTransition(async () => {
       const res = await createProject(project)
-      console.log(res.data)
-      if(res?.error) console.log(res.error)
-      if(res.success) dispatch(confirmProject(res.data))
+      if(notify(res, "Project created successfully")){
+         dispatch(confirmProject(res.data))
+         dispatch(toggleCreateProject(null))
+      }
       else dispatch(toggleCreateProject(null))
     })
   }

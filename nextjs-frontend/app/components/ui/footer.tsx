@@ -6,7 +6,6 @@ import React from 'react';
 const Footer = () => {
   return (
     <footer className="relative w-full bg-[#030303] pt-32 pb-16 overflow-hidden">
-      {/* Эффект свечения снизу (Linear Signature Glow) */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800] h-[300] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
 
         <div className='mb-8 flex items-center justify-center w-full h-250 relative flex-col'>
@@ -24,7 +23,6 @@ const Footer = () => {
 
         <button className="group z-10 relative px-10 py-4 bg-white text-black font-bold rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
           Get Started for free
-          {/* Едва заметный внутренний блик на кнопке */}
           <div className="absolute inset-0 rounded-full border border-white/20 group-hover:border-white/40 transition-colors" />
         </button>
         </div>
