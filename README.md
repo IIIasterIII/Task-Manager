@@ -37,6 +37,24 @@
 * <span style="color: #FF0000;">●</span> **Recharts** — A library for creating beautiful and interactive data charts.
 * <span style="color: #FF0000;">●</span> **Sonner** — A library for generating sleek pop-up notifications (toast messages).
 
+
+
+https://github.com/user-attachments/assets/3490ad71-7e54-4cca-913e-dc7d84cde45f
+
+
+
+https://github.com/user-attachments/assets/70d61cd9-cb5f-4d75-9807-fec9a130d118
+
+
+
+https://github.com/user-attachments/assets/af18e07f-3557-4793-bfa6-2aaee70f72c2
+
+
+
+https://github.com/user-attachments/assets/dc9049df-e8e2-4e8c-980d-1f16d147e6be
+
+
+
 ## <img src="https://capsule-render.vercel.app/api?type=rect&color=FF0000&height=1&section=header" width="100%"/>
 ### Installation
 ```bash
