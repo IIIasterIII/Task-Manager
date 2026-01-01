@@ -1,15 +1,22 @@
-# Task-Manager (FastAPI & Next.js)
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=transparent&fontColor=FF0000&text=Full%20Stack%20Task%20Manager&fontSize=40&fontWeight=800" />
+</p>
 
-## <img src="https://cdn-icons-png.flaticon.com/16/2989/2989937.png" width="16"> Table of Contents
-1. [Description](#description)
-2. [Demo](#demo)
-3. [Tech Stack](#tech-stack)
-4. [Installation & Setup](#installation--setup)
-5. [API Usage](#api-usage)
+<p align="center">
+  <a href="#description"><img src="https://img.shields.io/badge/-Description-black?style=flat-square"></a>
+  <a href="#demo"><img src="https://img.shields.io/badge/-Demo-black?style=flat-square"></a>
+  <a href="#tech-stack"><img src="https://img.shields.io/badge/-Tech%20Stack-black?style=flat-square"></a>
+  <a href="#installation"><img src="https://img.shields.io/badge/-Installation-black?style=flat-square"></a>
+  <a href="#api-usage"><img src="https://img.shields.io/badge/-API%20Usage-black?style=flat-square"></a>
+</p>
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=FF0000&height=2&section=header" width="100%"/>
 
-## <img src="https://cdn-icons-png.flaticon.com/16/943/943960.png" width="16"> Description
+<a name="description"></a>
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=transparent&fontColor=FF0000&text=Description&fontSize=30" />
+</p>
+
 **Task-Manager** is a high-performance full-stack application. It uses a FastAPI backend for robust data management and a Next.js frontend for a smooth, interactive user experience.
 
 ## <img src="https://cdn-icons-png.flaticon.com/16/4359/4359051.png" width="16"> Demo
@@ -18,6 +25,11 @@
     Your browser does not support the video tag.
   </video>
 </div>
+
+<a name="description"></a>
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=transparent&fontColor=FF0000&text=Description&fontSize=30" />
+</p>
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=FF0000&height=1&section=header" width="100%"/>
 
