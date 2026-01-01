@@ -1,11 +1,5 @@
 # Task-Manager (FastAPI & Next.js)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js&logoColor=red" alt="nextjs">
-  <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=red" alt="fastapi">
-  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="typescript">
-</p>
-
 ## <img src="https://cdn-icons-png.flaticon.com/16/2989/2989937.png" width="16"> Table of Contents
 1. [Description](#description)
 2. [Demo](#demo)
@@ -43,11 +37,24 @@
 * <span style="color: #FF0000;">●</span> **Recharts** — A library for creating beautiful and interactive data charts.
 * <span style="color: #FF0000;">●</span> **Sonner** — A library for generating sleek pop-up notifications (toast messages).
 
-<img src="https://capsule-render.vercel.app/api?type=rect&color=FF0000&height=1&section=header" width="100%"/>
-
-## <img src="https://cdn-icons-png.flaticon.com/16/2741/2741134.png" width="16"> Installation & Setup
-
-### 1. Clone the Repository
+## <img src="https://capsule-render.vercel.app/api?type=rect&color=FF0000&height=1&section=header" width="100%"/>
+### Installation
 ```bash
-git clone [https://github.com/IIIasterIII/Task-Manager.git](https://github.com/IIIasterIII/Task-Manager.git)
+git clone https://github.com/IIIasterIII/Task-Manager.git
 cd Task-Manager
+cd nextjs-frontend
+npm install
+mv .env.example .env  # Don't forget to fill in your variables
+npm run build
+npm run start
+
+cd Task-Manager
+cd fastapi-backend
+python3 -m venv .venv
+source .venv/bin/activate # For macOS/Linux:
+.venv\Scripts\activate # For Windows
+pip install --upgrade pip
+pip install -r requirements.txt
+mv .env.example .env  # Fill this file with your secrets
+uvicorn main:app --reload # Default: localhost:8000
+```
