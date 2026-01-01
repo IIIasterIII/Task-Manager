@@ -38,8 +38,13 @@ const Sidebar = () => {
   }, [projectDataCreation])
 
   const toggleFolder = (id: number) => setOpenFolders(prev => prev.includes(id) ? prev.filter(fId => fId !== id) : [...prev, id])
-  const favoriteRoots = useMemo(() => projects.filter(p => p.is_favorite && p.parent_id === null), [projects])
-  const generalRoots = useMemo(() => projects.filter(p => !p.is_favorite && p.parent_id === null), [projects])
+  const favoriteRoots = useMemo(() => 
+    Array.isArray(projects) ? projects.filter(p => p.is_favorite && p.parent_id === null) : [], 
+  [projects]);
+  
+  const generalRoots = useMemo(() => 
+    Array.isArray(projects) ? projects.filter(p => !p.is_favorite && p.parent_id === null) : [], 
+  [projects]);
 
   return (
     <div className="h-screen relative bg-background-950">
