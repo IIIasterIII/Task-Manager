@@ -17,7 +17,7 @@ export async function createProject(data: ProjectData) {
       name: data.name,
       color: data.color,
       parent_id: data.parent_id,
-      favorite: data.is_favorite // mapping to match backend schema
+      favorite: data.is_favorite
     }
 
     const res = await fetch(`${process.env.BACKEND_URL}/projects`, {
