@@ -10,11 +10,11 @@ export async function getHistory() {
     const cookieStore = await cookies();
     const allCookies = cookieStore.toString();
     try {
-        const res = await fetch(`${process.env.BACKEND_URL}/history`, { method: "GET", headers: { "Content-Type": "application/json", "Cookie": allCookies },cache: 'no-store'})
+        const res = await fetch(`${process.env.BACKEND_URL}/history`, { method: "GET", headers: { "Content-Type": "application/json", "Cookie": allCookies }, cache: 'no-store' })
         if (!res.ok) return { error: "Server error" };
-        const data = await res.json(); 
+        const data = await res.json();
         return { success: true, data };
-    } catch(e) {
+    } catch (e) {
         return { error: "Network Error" };
     }
 }
@@ -34,11 +34,15 @@ export const Postregister = async (data: UserData) => {
             body: JSON.stringify(data)
         })
 
-        if(!res.ok) return { error: "Server error" };
-        const resData =  await res.json();
+        if (!res.ok) {
+            const errorBody = await res.json().catch(() => ({}));
+            return { error: errorBody.detail || "Server error" };
+        }
+
+        const resData = await res.json();
         return { success: true, resData };
-    } catch(e) {
-     return { error: "Network Error" };   
+    } catch (e) {
+        return { error: "Network Error" };
     }
 }
 

@@ -26,24 +26,29 @@ const Page = () => {
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault()
-    if(userData.password !== userData.confirmPassword) {
+    if (userData.password !== userData.confirmPassword) {
       alert("Passwords do not match!")
       return
     }
 
-    if(!userData.username || !userData.email || !userData.password) {
+    if (!userData.username || !userData.email || !userData.password) {
       alert("Please fill in all required fields!")
       return
     }
 
-    if(!avatar) {
+    if (!avatar) {
       alert("Please upload an avatar!")
       return
     }
 
     startTransition(async () => {
-      const res = await Postregister({username: userData.username, email: userData.email, password: userData.password, avatar: avatar})
-      console.log(res)
+      const res = await Postregister({ username: userData.username, email: userData.email, password: userData.password, avatar: avatar })
+      if (res.error) {
+        alert(res.error)
+      } else {
+        alert("Registration successful!")
+        router.push("/auth")
+      }
     })
   }
 
@@ -52,7 +57,7 @@ const Page = () => {
       <div className="absolute top-0 right-1/4 w-[800] h-[500] bg-[#FE0C46]/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[500] h-[500] bg-[#FE0C46]/5 blur-[100px] rounded-full pointer-events-none" />
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-[460] z-10">
@@ -63,7 +68,7 @@ const Page = () => {
 
         <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 p-8 rounded-3xl shadow-2xl">
           <form className="space-y-5">
-            
+
             <div className="flex flex-col items-center mb-6">
               <div className="relative group">
                 <div className="w-24 h-24 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 flex items-center justify-center overflow-hidden transition-all group-hover:border-[#FE0C46]/50">
@@ -149,8 +154,8 @@ const Page = () => {
             <div className="relative flex justify-center text-xs uppercase"><span className="bg-[#121214] px-4 text-zinc-600 font-bold tracking-tighter">Instant access</span></div>
           </div>
 
-          <button 
-            onClick={() => window.location.href = "http://localhost:8000/login"} 
+          <button
+            onClick={() => window.location.href = "http://localhost:8000/login"}
             className="w-full bg-white/5 border duration-500 border-white/10 hover:bg-white/10 text-white py-3 rounded-xl transition-all flex items-center justify-center gap-3 active:scale-[0.98] cursor-pointer"
           >
             <img alt="Google" src="../google-icon.png" className="h-5 w-5" />
